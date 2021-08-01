@@ -22,7 +22,7 @@ repos:
   rev: 3.9.2
   hooks:
     - id: flake8
-      exclude: migrations
+      exclude: (migrations|backend/config/settings/)
 
 - repo: https://github.com/ambv/black
   rev: 21.6b0

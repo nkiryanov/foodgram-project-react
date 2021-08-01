@@ -6,6 +6,10 @@ from django.utils.translation import gettext_lazy as _
 class User(AbstractUser):
     """Email field is required and it used for authentication."""
 
-    email = models.EmailField(_("email address"), blank=False, unique=True)
+    email = models.EmailField(
+        _("email address"),
+        blank=False,
+        unique=True,
+    )
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
