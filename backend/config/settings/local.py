@@ -18,7 +18,7 @@ SECRET_KEY = env(
     default="#q%&^pa6-rznu1%4q=z29mlh2u@vs%w)^4n#88=ro45ualp)u!",
 )
 # https://docs.djangoproject.com/en/dev/ref/settings/#allowed-hosts
-ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
+ALLOWED_HOSTS = ["*"]
 
 
 # django-debug-toolbar

@@ -11,6 +11,7 @@ env = environ.Env()
 # Root folder of the project
 # ------------------------------------------------------------------------------
 ROOT_DIR = Path(__file__).resolve(strict=True).parent.parent.parent
+APPS_DIR = ROOT_DIR / "foodgram"
 
 # GENERAL
 # ------------------------------------------------------------------------------
@@ -37,11 +38,20 @@ DJANGO_APPS = [
 ]
 THIRD_PARTY_APPS = [
     "corsheaders",
+    "rest_framework",
+    "rest_framework.authtoken",
+    "djoser",
 ]
 LOCAL_APPS = [
+    "foodgram.users",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
+
+# AUTHENTICATION
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#auth-user-model
+AUTH_USER_MODEL = "users.User"
 
 
 SITE_ID = 1
@@ -102,31 +112,29 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "rest_framework.authentication.TokenAuthentication",
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 20,
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S",
 }
 
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
-    "ROTATE_REFRESH_TOKENS": True,
-    "BLACKLIST_AFTER_ROTATION": True,
+
+DJOSER = {
+    "SERIALIZERS": {
+        "user": "foodgram.users.serializers.UserSerializer",
+        "current_user": "foodgram.users.serializers.UserSerializer",
+        "user_create": "foodgram.users.serializers.UserCreateSerializer",
+    }
 }
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
-
 LANGUAGE_CODE = "ru-Ru"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
 
@@ -142,12 +150,20 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
+
 # MEDIA
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-root
-MEDIA_ROOT = str(ROOT_DIR / "media")
+MEDIA_ROOT = str(APPS_DIR / "media")
 # https://docs.djangoproject.com/en/dev/ref/settings/#media-url
 MEDIA_URL = "/media/"
+
+
+# FIXTURES
+# ------------------------------------------------------------------------------
+# https://docs.djangoproject.com/en/dev/ref/settings/#fixture-dirs
+FIXTURE_DIRS = (str(APPS_DIR / "fixtures"),)
+
 
 # Default primary key field type
 # ------------------------------------------------------------------------------
