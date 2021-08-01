@@ -37,7 +37,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
         history.push('/recipes')
       })
   }, [])
-  
+
   const { url } = useRouteMatch()
   const {
     author = {},
@@ -50,7 +50,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
     is_favorited,
     is_in_shopping_cart
   } = recipe
-  
+
   return <Main>
     <Container>
       <MetaTags>
@@ -98,7 +98,7 @@ const SingleCard = ({ loadItem, updateOrders }) => {
                 handleAddToCart({ id, toAdd: !is_in_shopping_cart, callback: updateOrders })
               }}
             >
-              
+
             {is_in_shopping_cart ? <><Icons.DoneIcon color="#FFF"/>Рецепт добавлен</> : <><Icons.PlusIcon /> Добавить в покупки</>}
             </Button>}
             {(userContext || {}).id !== author.id && authContext && <Button
@@ -119,4 +119,3 @@ const SingleCard = ({ loadItem, updateOrders }) => {
 }
 
 export default SingleCard
-

@@ -20,7 +20,7 @@ const HomePage = ({ updateOrders }) => {
     handleAddToCart
   } = useRecipes()
 
-  
+
   const getRecipes = ({ page = 1, tags }) => {
     api
       .getRecipes({ page, tags })
@@ -76,4 +76,3 @@ const HomePage = ({ updateOrders }) => {
 }
 
 export default HomePage
-

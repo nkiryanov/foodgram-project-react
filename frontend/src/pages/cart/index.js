@@ -11,7 +11,7 @@ const Cart = ({ updateOrders, orders }) => {
     setRecipes,
     handleAddToCart
   } = useRecipes()
-  
+
   const getRecipes = () => {
     api
       .getRecipes({
@@ -57,4 +57,3 @@ const Cart = ({ updateOrders, orders }) => {
 }
 
 export default Cart
-

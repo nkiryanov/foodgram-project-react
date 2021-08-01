@@ -19,7 +19,7 @@ const Favorites = ({ updateOrders }) => {
     handleLike,
     handleAddToCart
   } = useRecipes()
-  
+
   const getRecipes = ({ page = 1, tags }) => {
     api
       .getRecipes({ page, is_favorited: true, tags })
@@ -72,4 +72,3 @@ const Favorites = ({ updateOrders }) => {
 }
 
 export default Favorites
-

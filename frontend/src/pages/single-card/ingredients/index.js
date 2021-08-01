@@ -20,4 +20,3 @@ const Ingredients = ({ ingredients }) => {
 }
 
 export default Ingredients
-

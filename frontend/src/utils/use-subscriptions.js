@@ -24,7 +24,7 @@ export default function useRecipes () {
         }
       })
   }
-  
+
   return {
     subscriptions,
     setSubscriptions,

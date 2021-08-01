@@ -1,6 +1,5 @@
 import json
 
-
 with open("data/ingredients.json") as initial_file:
     raw_ingredients = json.load(initial_file)
 

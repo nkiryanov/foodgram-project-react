@@ -1,7 +1,6 @@
-import os
-
 from .base import *  # noqa
 
+# import os
 # env_file = os.path.join(ROOT_DIR, ".env")
 # environ.Env.read_env(env_file)
 
@@ -44,7 +43,8 @@ INSTALLED_APPS += ["django_extensions"]  # noqa: F405
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#email-backend
 EMAIL_BACKEND = env(
-    "DJANGO_EMAIL_BACKEND", default="django.core.mail.backends.console.EmailBackend"
+    "DJANGO_EMAIL_BACKEND",
+    default="django.core.mail.backends.console.EmailBackend",
 )
 
 # Your stuff...
