@@ -41,9 +41,11 @@ THIRD_PARTY_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "djoser",
+    "colorfield",
 ]
 LOCAL_APPS = [
     "foodgram.users",
+    "foodgram.recipes",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

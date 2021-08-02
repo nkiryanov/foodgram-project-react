@@ -10,6 +10,7 @@ MEDIA_ROOT = settings.MEDIA_ROOT
 
 extra_patterns = [
     path("", include("foodgram.users.urls")),
+    path("", include("foodgram.recipes.urls")),
 ]
 
 urlpatterns = [
