@@ -1,7 +1,9 @@
 from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+
+from .utils import cyrillic_slugify
 
 User = get_user_model()
 
@@ -46,15 +48,22 @@ class Ingredient(models.Model):
 
 
 class RecipeTag(models.Model):
+    color = ColorField(default="#FF0000")
     name = models.CharField(
         max_length=30,
         unique=True,
         verbose_name="Тэг рецепта",
     )
-    color = ColorField(default="#FF0000")
     slug = models.SlugField(
-        max_length=40, unique=True, verbose_name="Slug тега рецепта"
+        max_length=40,
+        unique=True,
+        verbose_name="Slug тега рецепта",
     )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = cyrillic_slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name}"
@@ -87,6 +96,7 @@ class Recipe(models.Model):
         verbose_name="Время приготовления (в минутах)",
         validators=[
             MinValueValidator(1),
+            MaxValueValidator(4320),
         ],
     )
     tags = models.ManyToManyField(
@@ -111,7 +121,7 @@ class Recipe(models.Model):
         verbose_name_plural = "Рецепты"
 
     def __str__(self):
-        return self.title
+        return self.name
 
 
 class RecipeIngredient(models.Model):
@@ -125,13 +135,12 @@ class RecipeIngredient(models.Model):
         on_delete=models.RESTRICT,
         verbose_name="Ингредиент",
     )
-    amount = models.DecimalField(
-        max_digits=6,
-        decimal_places=1,
+    amount = models.PositiveIntegerField(
+        verbose_name="Количество",
         validators=[
             MinValueValidator(0),
+            MaxValueValidator(200),
         ],
-        verbose_name="Количество",
     )
 
     class Meta:

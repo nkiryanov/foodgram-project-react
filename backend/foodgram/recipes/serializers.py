@@ -1,5 +1,6 @@
-from foodgram.recipes.models import Ingredient, RecipeTag
 from rest_framework import serializers
+
+from .models import Ingredient, Recipe, RecipeTag
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -11,4 +12,13 @@ class IngredientSerializer(serializers.ModelSerializer):
 class RecipeTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeTag
+        fields = "__all__"
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    tags = RecipeTagSerializer(many=True)
+    ingredients = IngredientSerializer(many=True)
+
+    class Meta:
+        model = Recipe
         fields = "__all__"

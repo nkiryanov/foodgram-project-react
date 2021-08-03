@@ -1,8 +1,10 @@
 from django.urls import include, path
-from foodgram.recipes.views import IngredientViewSet, RecipeTagViewSet
 from rest_framework.routers import DefaultRouter
 
+from .views import IngredientViewSet, RecipeTagViewSet, RecipeViewSet
+
 router = DefaultRouter()
+
 router.register(
     "ingredients",
     IngredientViewSet,
@@ -12,6 +14,11 @@ router.register(
     "tags",
     RecipeTagViewSet,
     basename="tags",
+)
+router.register(
+    "recipes",
+    RecipeViewSet,
+    basename="recipes",
 )
 
 urlpatterns = [

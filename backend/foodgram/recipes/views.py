@@ -1,9 +1,11 @@
-from foodgram.recipes.models import Ingredient, RecipeTag
-from foodgram.recipes.serializers import (
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from .models import Ingredient, Recipe, RecipeTag
+from .serializers import (
     IngredientSerializer,
+    RecipeSerializer,
     RecipeTagSerializer,
 )
-from rest_framework.viewsets import ReadOnlyModelViewSet
 
 
 class RecipeTagViewSet(ReadOnlyModelViewSet):
@@ -16,3 +18,8 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
+
+
+class RecipeViewSet(ModelViewSet):
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer

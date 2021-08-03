@@ -9,8 +9,29 @@ from foodgram.recipes.models import (
 )
 from foodgram.users.factories import UserFactory
 
+from .utils import cyrillic_slugify
+
+
+class RecipeTagFactory(factory.django.DjangoModelFactory):
+    """Creates RecipeTags with random name and color."""
+
+    class Meta:
+        model = RecipeTag
+        django_get_or_create = ["name", "slug"]
+
+    name = factory.Faker("word")
+    color = factory.Faker("color_name")
+    slug = factory.LazyAttribute(lambda obj: cyrillic_slugify(obj.name))
+
 
 class RecipeFactory(factory.django.DjangoModelFactory):
+    """Rely on User and RecipeTag and Ingredient objects.
+
+    Creates recipe with at least one tag and ingredient.
+    It supports 'tags__num' and 'add_ingredients' values. If them passed
+    creates recipes with that values.
+    """
+
     class Meta:
         model = Recipe
 
@@ -20,41 +41,45 @@ class RecipeFactory(factory.django.DjangoModelFactory):
     text = factory.Faker("text")
     cooking_time = factory.Faker("random_int", max=50)
 
+    def _post_generation_helper():
+        pass
+
     @factory.post_generation
-    def add_tags(self, create, extracted, **kwargs):
+    def tags(self, create, extracted, **kwargs):
         if not create:
             return
 
-        tags_amount = random.randint(1, 3)
-        tags = RecipeTag.objects.order_by("?")[:tags_amount]
+        if extracted:
+            tags = extracted
+            self.tags.add(*tags)
+            return
+
+        at_least = 1
+        num = kwargs.get("num", None)
+        how_many = num or at_least
+
+        tags_count = RecipeTag.objects.count()
+        how_many = min(tags_count, how_many)
+
+        tags = RecipeTag.objects.order_by("?")[:how_many]
         self.tags.add(*tags)
 
+    @factory.post_generation
+    def add_ingredients(self, create, extracted, **kwargs):
+        if not create:
+            return
 
-class RecipeIngredientFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = RecipeIngredient
+        at_least = 1
 
-    recipe = factory.SubFactory(RecipeFactory)
-    ingredient = factory.Iterator(Ingredient.objects.all())
-    amount = factory.Faker(
-        "pydecimal",  # noqa
-        positive=True,
-        left_digits=2,
-        right_digits=1,
-    )
+        how_many = extracted or at_least
+        how_many = min(how_many, 20)
 
+        ingredients = Ingredient.objects.order_by("?")[:how_many]
 
-class RecipeWithIngredientsFactory(RecipeFactory):
-    recipe_ing_1 = factory.RelatedFactory(
-        RecipeIngredientFactory,
-        factory_related_name="recipe",
-    )
-    recipe_ing_2 = factory.RelatedFactory(
-        RecipeIngredientFactory,
-        factory_related_name="recipe",
-    )
-
-
-class RecipeTagFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = RecipeTag
+        for ingredient in ingredients:
+            amount = random.randint(1, 100)
+            RecipeIngredient.objects.create(
+                recipe=self,
+                ingredient=ingredient,
+                amount=amount,
+            )

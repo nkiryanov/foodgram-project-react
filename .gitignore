@@ -134,3 +134,6 @@ dmypy.json
 
 # macOS Files
 *.DS_Store
+
+# Media
+*media/
