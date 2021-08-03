@@ -44,8 +44,9 @@ THIRD_PARTY_APPS = [
     "colorfield",
 ]
 LOCAL_APPS = [
-    "foodgram.users",
+    "foodgram.core",
     "foodgram.recipes",
+    "foodgram.users",
 ]
 # https://docs.djangoproject.com/en/dev/ref/settings/#installed-apps
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -115,7 +116,7 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "DEFAULT_PAGINATION_CLASS": "foodgram.core.pagination.FoodgramDefaultPagination",
     "PAGE_SIZE": 20,
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S",
 }

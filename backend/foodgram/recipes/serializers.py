@@ -1,3 +1,4 @@
+from foodgram.users.serializers import UserSerializer
 from rest_framework import serializers
 
 from .models import Ingredient, Recipe, RecipeTag
@@ -18,6 +19,7 @@ class RecipeTagSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     tags = RecipeTagSerializer(many=True)
     ingredients = IngredientSerializer(many=True)
+    author = UserSerializer()
 
     class Meta:
         model = Recipe
