@@ -21,7 +21,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     username = factory.Sequence(lambda n: f"user_{User.objects.count()}")
     email = factory.LazyAttribute(lambda obj: f"{obj.username}@foodgram.ru")
-    password = "Food2021!"
+    password = "Food2021"
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
 

@@ -2,6 +2,7 @@ from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models.expressions import Exists, OuterRef
 
 from .utils import cyrillic_slugify
 
@@ -69,6 +70,16 @@ class RecipeTag(models.Model):
         return f"{self.name}"
 
 
+class RecipeQuerySet(models.QuerySet):
+    def with_favorites(self, user):
+        subquery = RecipeFavorite.objects.filter(
+            user=user,
+            recipe=OuterRef("id"),
+        )
+        qs = self.annotate(is_favorite=Exists(subquery))
+        return qs
+
+
 class Recipe(models.Model):
     author = models.ForeignKey(
         User,
@@ -109,6 +120,9 @@ class Recipe(models.Model):
         auto_now_add=True,
         db_index=True,
     )
+
+    objects = models.Manager()
+    custom_objects = RecipeQuerySet.as_manager()
 
     class Meta:
         ordering = ["-pub_date"]
@@ -169,7 +183,7 @@ class RecipeFavorite(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=("user", "recipe"),
-                name="unique_recipefavorite_by_user_and_recipe",
+                name="Unique RecipeFavorite per user and recipe",
             ),
         ]
         verbose_name = "Объект избранного"

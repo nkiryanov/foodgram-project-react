@@ -33,7 +33,7 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = [RecipeIngredientInline]
 
 
-class FavoriteAdmin(admin.ModelAdmin):
+class RecipeFavoriteAdmin(admin.ModelAdmin):
     fields = ["user", "recipe"]
     search_fields = ["user", "recipe"]
 
@@ -41,4 +41,4 @@ class FavoriteAdmin(admin.ModelAdmin):
 admin.site.register(MeasurementUnit, MeasurementUnitAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(RecipeFavorite, FavoriteAdmin)
+admin.site.register(RecipeFavorite, RecipeFavoriteAdmin)

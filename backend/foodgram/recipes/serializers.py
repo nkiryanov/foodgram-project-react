@@ -20,6 +20,10 @@ class RecipeSerializer(serializers.ModelSerializer):
     tags = RecipeTagSerializer(many=True)
     ingredients = IngredientSerializer(many=True)
     author = UserSerializer()
+    is_favorited = serializers.BooleanField(
+        read_only=True,
+        source="is_favorite",
+    )
 
     class Meta:
         model = Recipe
