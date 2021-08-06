@@ -2,15 +2,15 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Subscription
+from .models import UserFollow
 
 User = get_user_model()
 
 
-class SubscriptionAdmin(admin.ModelAdmin):
-    fields = ["user", "author"]
-    search_fields = ["user", "author"]
+class UserFollowAdmin(admin.ModelAdmin):
+    fields = ["follower", "following"]
+    search_fields = ["follower__username", "following__username"]
 
 
 admin.site.register(User, UserAdmin)
-admin.site.register(Subscription, SubscriptionAdmin)
+admin.site.register(UserFollow, UserFollowAdmin)

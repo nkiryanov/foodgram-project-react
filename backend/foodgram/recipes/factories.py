@@ -1,15 +1,17 @@
 import random
 
 import factory
+from django.contrib.auth import get_user_model
 from foodgram.recipes.models import (
     Ingredient,
     Recipe,
     RecipeIngredient,
     RecipeTag,
 )
-from foodgram.users.factories import UserFactory
 
 from .utils import cyrillic_slugify
+
+User = get_user_model()
 
 
 class RecipeTagFactory(factory.django.DjangoModelFactory):
@@ -36,7 +38,7 @@ class RecipeFactory(factory.django.DjangoModelFactory):
         model = Recipe
 
     name = factory.Faker("sentence")
-    author = factory.SubFactory(UserFactory)
+    author = factory.Iterator(User.objects.all())
     image = factory.django.ImageField(color=factory.Faker("color_name"))
     text = factory.Faker("text")
     cooking_time = factory.Faker("random_int", max=50)

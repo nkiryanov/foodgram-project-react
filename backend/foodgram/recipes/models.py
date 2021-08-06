@@ -76,7 +76,7 @@ class RecipeQuerySet(models.QuerySet):
             user=user,
             recipe=OuterRef("id"),
         )
-        qs = self.annotate(is_favorite=Exists(subquery))
+        qs = self.annotate(is_favorited=Exists(subquery))
         return qs
 
 

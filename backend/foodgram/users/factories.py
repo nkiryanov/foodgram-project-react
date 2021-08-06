@@ -2,8 +2,19 @@ import factory
 from django.contrib.auth import get_user_model
 from faker import Faker
 
+from .models import UserFollow
+
 User = get_user_model()
 fake = Faker(["ru-RU"])
+
+
+class UserFollowFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = UserFollow
+        django_get_or_create = ["follower", "following"]
+
+    follower = factory.Iterator(User.objects.all())
+    following = factory.Iterator(User.objects.all())
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -36,3 +47,26 @@ class UserFactory(factory.django.DjangoModelFactory):
 
         manager = cls._get_manager(model_class)
         return manager.create_user(*args, **kwargs)
+
+    # @factory.post_generation
+    # def following(self, create, extracted, **kwargs):
+    #     if not create:
+    #         return
+
+    #     if extracted:
+    #         following_users = extracted
+    #         UserFollow.objects.create(follower=self, following=following_users)
+    #         return
+
+    #     how_many = extracted or at_least
+    #     how_many = min(how_many, 20)
+
+    #     ingredients = Ingredient.objects.order_by("?")[:how_many]
+
+    #     for ingredient in ingredients:
+    #         amount = random.randint(1, 100)
+    #         RecipeIngredient.objects.create(
+    #             recipe=self,
+    #             ingredient=ingredient,
+    #             amount=amount,
+    #         )
