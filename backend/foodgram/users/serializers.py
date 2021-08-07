@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from djoser import serializers as djoser_serializers
-from foodgram.recipes.serializers import BaseRecipeSerializer
+from foodgram.recipes.models import Recipe
 from rest_framework import serializers
 
 User = get_user_model()
@@ -27,6 +27,17 @@ class UserCreateSerializer(djoser_serializers.UserCreateSerializer):
             "first_name",
             "last_name",
         )
+
+
+class BaseRecipeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = [
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        ]
 
 
 class SubscriptionSerializer(UserSerializer):

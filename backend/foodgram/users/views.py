@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet
-from foodgram.recipes.serializers import SubscriptionSerializer
 from rest_framework.mixins import ListModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
+
+from .serializers import SubscriptionSerializer
 
 User = get_user_model()
 

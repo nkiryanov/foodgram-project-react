@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-
 from foodgram.users.factories import UserFactory
 
 User = get_user_model()
@@ -9,8 +8,8 @@ User = get_user_model()
 
 class UserModelTest(TestCase):
     @classmethod
-    def setUpClass(cls):
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         UserFactory(email="user1@email.ru")
 
     def test_email_is_required_field(self):
