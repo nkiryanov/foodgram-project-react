@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class UserQuerySet(models.QuerySet):
-    def with_follows(self, user):
+    def with_follows(self, user=None):
         subquery = UserFollow.objects.filter(
             follower=user,
             following=OuterRef("id"),

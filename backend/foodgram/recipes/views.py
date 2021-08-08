@@ -28,7 +28,11 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.all()
+    queryset = (
+        Recipe.objects.prefetch_related("ingredients")
+        .prefetch_related("author__following")
+        .prefetch_related("tags")
+    )
     serializer_class = RecipeSerializer
     permission_classes = [AllowAny]
 

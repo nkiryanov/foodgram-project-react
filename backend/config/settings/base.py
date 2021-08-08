@@ -128,7 +128,11 @@ DJOSER = {
         "user": "foodgram.users.serializers.UserSerializer",
         "current_user": "foodgram.users.serializers.UserSerializer",
         "user_create": "foodgram.users.serializers.UserCreateSerializer",
-    }
+    },
+    "PERMISSIONS": {
+        "user": ["rest_framework.permissions.AllowAny"],
+        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
+    },
 }
 
 
