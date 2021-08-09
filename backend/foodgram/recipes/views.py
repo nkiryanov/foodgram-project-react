@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from .models import Ingredient, Recipe, RecipeFavorite, RecipeTag
+from .models import Ingredient, Recipe, RecipeCart, RecipeFavorite, RecipeTag
 from .serializers import (
     BaseRecipeSerializer,
     IngredientSerializer,
@@ -43,13 +43,13 @@ class RecipeViewSet(ModelViewSet):
         if not user.is_authenticated:
             user = None
 
-        queryset = (
+        qs = (
             Recipe.custom_objects.prefetch_related("ingredients")
-            .prefetch_related("author__following")
+            .prefetch_related("author")
             .prefetch_related("tags")
         )
-        queryset = queryset.with_favorites(user=user)
-        return queryset.order_by("-pub_date")
+        qs = qs.with_favorites(user=user).with_cart(user=user)
+        return qs.order_by("-pub_date")
 
     @action(
         methods=["get", "delete"],
@@ -83,6 +83,42 @@ class RecipeViewSet(ModelViewSet):
             RecipeFavorite.objects.filter(
                 user=request.user,
                 recipe=recipe_to_favorite,
+            ).delete()
+
+            return Response(status=status.HTTP_201_CREATED)
+
+    @action(
+        methods=["get", "delete"],
+        detail=True,
+        permission_classes=[IsAuthenticated],
+    )
+    def shopping_cart(self, request, pk=None):
+        recipe_to_cart = self.get_object()
+
+        is_favorite_exists = RecipeCart.objects.filter(
+            user=request.user,
+            recipe=recipe_to_cart,
+        ).exists()
+
+        if request.method == "GET":
+            if is_favorite_exists:
+                raise NotAcceptable("Такой рецепт уже в корзине покупок.")
+
+            RecipeCart.objects.create(
+                user=request.user,
+                recipe=recipe_to_cart,
+            )
+
+            serializer = BaseRecipeSerializer(recipe_to_cart)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            if not is_favorite_exists:
+                raise NotFound("Такого рецепта в корзине покупок нет.")
+
+            RecipeCart.objects.filter(
+                user=request.user,
+                recipe=recipe_to_cart,
             ).delete()
 
             return Response(status=status.HTTP_201_CREATED)

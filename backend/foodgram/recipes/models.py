@@ -3,15 +3,14 @@ from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models.expressions import Exists, OuterRef
-
-from .utils import cyrillic_slugify
+from foodgram.core.utils import cyrillic_slugify
 
 User = get_user_model()
 
 
 class MeasurementUnit(models.Model):
     name = models.CharField(
-        max_length=200,
+        max_length=50,
         unique=True,
         verbose_name="Единица измерения",
     )
@@ -79,6 +78,14 @@ class RecipeQuerySet(models.QuerySet):
         qs = self.annotate(is_favorited=Exists(subquery))
         return qs
 
+    def with_cart(self, user=None):
+        subquery = RecipeCart.objects.filter(
+            user=user,
+            recipe=OuterRef("id"),
+        )
+        qs = self.annotate(is_in_shopping_cart=Exists(subquery))
+        return qs
+
 
 class Recipe(models.Model):
     author = models.ForeignKey(
@@ -96,6 +103,7 @@ class Recipe(models.Model):
         verbose_name="Картинка",
     )
     text = models.TextField(
+        max_length=1000,
         verbose_name="Описание рецепта",
     )
     ingredients = models.ManyToManyField(
@@ -191,3 +199,31 @@ class RecipeFavorite(models.Model):
 
     def __str__(self):
         return f"Избранный {self.recipe} у {self.user}"
+
+
+class RecipeCart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="cart",
+        verbose_name="Пользователь",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="cart",
+        verbose_name="Рецепт",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "recipe"),
+                name="Unique RecipeCart per user and recipe",
+            ),
+        ]
+        verbose_name = "Объект корзины покупок"
+        verbose_name_plural = "Объекты корзины покупок"
+
+    def __str__(self):
+        return f"Рецепт {self.recipe} из корзины покупок у {self.user}"

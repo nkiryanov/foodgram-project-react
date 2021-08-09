@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from ..users import serializers as user_serializers
+from ..users.serializers import UserSerializer
 from .models import Ingredient, Recipe, RecipeTag
 
 
@@ -35,7 +35,7 @@ class BaseRecipeSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     tags = RecipeTagSerializer(many=True)
     ingredients = IngredientSerializer(many=True)
-    author = user_serializers.UserSerializer()
+    author = UserSerializer()
     is_favorited = serializers.BooleanField(read_only=True)
 
     class Meta:

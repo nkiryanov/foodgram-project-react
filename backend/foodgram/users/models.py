@@ -19,6 +19,10 @@ class UserQuerySet(models.QuerySet):
         return qs
 
 
+class CustomUserManager(UserManager.from_queryset(UserQuerySet)):
+    use_in_migrations = False
+
+
 class User(AbstractUser):
     """Email field is required and it used for authentication."""
 
@@ -28,7 +32,8 @@ class User(AbstractUser):
         unique=True,
     )
 
-    extended_objects = UserManager.from_queryset(UserQuerySet)()
+    objects = UserManager()
+    extended_objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
