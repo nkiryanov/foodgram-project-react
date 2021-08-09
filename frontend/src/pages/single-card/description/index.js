@@ -9,4 +9,3 @@ const Description = ({ description }) => {
 }
 
 export default Description
-

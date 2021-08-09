@@ -1,4 +1,4 @@
-version: '3.3'
+version: '3.8'
 services:
 
   frontend:
@@ -16,3 +16,4 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
       - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
+      - ../docs/:/usr/share/nginx/html/api/docs/

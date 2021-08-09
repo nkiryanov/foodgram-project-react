@@ -168,7 +168,7 @@ function App() {
   if (loggedIn === null) {
     return <div className={styles.loading}>Loading</div>
   }
-  
+
   return <AuthContext.Provider value={loggedIn}>
     <UserContext.Provider value={user}>
       <div className={cn("App", {

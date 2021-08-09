@@ -1,5 +1,5 @@
+import codecs
 import json
-
 
 with open("data/ingredients.json") as initial_file:
     raw_ingredients = json.load(initial_file)
@@ -13,7 +13,7 @@ for row in raw_ingredients:
     if ingredient_name != "" and dimension_name != "":
         if dimension_name not in dimensions_dict:
             dimensions_dict[dimension_name] = {
-                "model": "recipes.dimension",
+                "model": "recipes.measurementunit",
                 "pk": len(dimensions_dict) + 1,
                 "fields": {
                     "name": dimension_name,
@@ -25,11 +25,13 @@ for row in raw_ingredients:
                 "pk": len(ingredients_dict) + 1,
                 "fields": {
                     "name": ingredient_name,
-                    "dimension": dimensions_dict[dimension_name]["pk"],
+                    "measurement_unit": dimensions_dict[dimension_name]["pk"],
                 },
             }
 
 dump_list = list(dimensions_dict.values()) + list(ingredients_dict.values())
 
-with open("data/ingredients_updated.json", "w") as dest:
+with codecs.open(
+    "data/ingredients_updated.json", "w", encoding="utf-8"
+) as dest:
     json.dump(dump_list, dest, ensure_ascii=False)
