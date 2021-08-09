@@ -42,6 +42,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "djoser",
     "colorfield",
+    "django_filters",
 ]
 LOCAL_APPS = [
     "foodgram.core",
@@ -115,6 +116,9 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
+    ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
     ],
     "DEFAULT_PAGINATION_CLASS": "foodgram.core.pagination.FoodgramDefaultPagination",
     "PAGE_SIZE": 20,

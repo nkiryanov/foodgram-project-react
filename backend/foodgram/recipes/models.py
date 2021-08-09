@@ -71,7 +71,7 @@ class RecipeTag(models.Model):
 
 
 class RecipeQuerySet(models.QuerySet):
-    def with_favorites(self, user):
+    def with_favorites(self, user=None):
         subquery = RecipeFavorite.objects.filter(
             user=user,
             recipe=OuterRef("id"),
