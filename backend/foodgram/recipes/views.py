@@ -51,41 +51,46 @@ class RecipeViewSet(ModelViewSet):
         qs = qs.with_favorites(user=user).with_cart(user=user)
         return qs.order_by("-pub_date")
 
+    def recipe_template_action(self, request, pk=None, related_model=None):
+        """Template for similar ViewSet actions."""
+
+        assert (
+            related_model is not None
+        ), "Связанная модель обязательный параметр."
+
+        recipe = self.get_object()
+        is_related_obj_exists = related_model.objects.filter(
+            user=request.user,
+            recipe=recipe,
+        ).exists()
+
+        if request.method == "GET":
+            if is_related_obj_exists:
+                raise NotAcceptable("Такой рецепт у пользователя существует.")
+            related_model.objects.create(
+                user=request.user,
+                recipe=recipe,
+            )
+            serializer = BaseRecipeSerializer(recipe)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        if request.method == "DELETE":
+            if not is_related_obj_exists:
+                raise NotFound("Такой рецепт у пользователя не найден.")
+            related_model.objects.filter(
+                user=request.user,
+                recipe=recipe,
+            ).delete()
+            return Response(status=status.HTTP_201_CREATED)
+
     @action(
         methods=["get", "delete"],
         detail=True,
         permission_classes=[IsAuthenticated],
     )
     def favorite(self, request, pk=None):
-        recipe_to_favorite = self.get_object()
-
-        is_favorite_exists = RecipeFavorite.objects.filter(
-            user=request.user,
-            recipe=recipe_to_favorite,
-        ).exists()
-
-        if request.method == "GET":
-            if is_favorite_exists:
-                raise NotAcceptable("Такой рецепт уже в избранном.")
-
-            RecipeFavorite.objects.create(
-                user=request.user,
-                recipe=recipe_to_favorite,
-            )
-
-            serializer = BaseRecipeSerializer(recipe_to_favorite)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == "DELETE":
-            if not is_favorite_exists:
-                raise NotFound("Такого рецепта в избранном нет.")
-
-            RecipeFavorite.objects.filter(
-                user=request.user,
-                recipe=recipe_to_favorite,
-            ).delete()
-
-            return Response(status=status.HTTP_201_CREATED)
+        related_model = RecipeFavorite
+        return self.recipe_template_action(request, pk, related_model)
 
     @action(
         methods=["get", "delete"],
@@ -93,32 +98,5 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def shopping_cart(self, request, pk=None):
-        recipe_to_cart = self.get_object()
-
-        is_favorite_exists = RecipeCart.objects.filter(
-            user=request.user,
-            recipe=recipe_to_cart,
-        ).exists()
-
-        if request.method == "GET":
-            if is_favorite_exists:
-                raise NotAcceptable("Такой рецепт уже в корзине покупок.")
-
-            RecipeCart.objects.create(
-                user=request.user,
-                recipe=recipe_to_cart,
-            )
-
-            serializer = BaseRecipeSerializer(recipe_to_cart)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == "DELETE":
-            if not is_favorite_exists:
-                raise NotFound("Такого рецепта в корзине покупок нет.")
-
-            RecipeCart.objects.filter(
-                user=request.user,
-                recipe=recipe_to_cart,
-            ).delete()
-
-            return Response(status=status.HTTP_201_CREATED)
+        related_model = RecipeCart
+        return self.recipe_template_action(request, pk, related_model)
