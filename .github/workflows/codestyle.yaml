@@ -1,0 +1,35 @@
+name: pep8 codestyle
+
+on: push
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  codestyle:
+    name: Testing PEP8 and codestyle
+    runs-on: ubuntu-latest
+    steps:
+    -
+      name: Check out the repo
+      uses: actions/checkout@v2
+    -
+      name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    -
+      name: Install dependencies
+      run: |
+        pwd
+        ls -la
+        python -m pip install --upgrade pip
+        pip install flake8 black
+        pip install -r requirements/prod.txt
+    -
+      name: Lint with flake8
+      run: flake8 .
+    -
+      name: Codestyle by black
+      run: black --check .

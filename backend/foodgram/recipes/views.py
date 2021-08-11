@@ -10,6 +10,7 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .models import Ingredient, Recipe, RecipeCart, RecipeFavorite, RecipeTag
 from .serializers import (
     BaseRecipeSerializer,
+    CreateRecipeSerializer,
     IngredientSerializer,
     RecipeSerializer,
     RecipeTagSerializer,
@@ -34,7 +35,6 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    serializer_class = RecipeSerializer
     permission_classes = [AllowAny]
     filterset_class = RecipeFilter
 
@@ -43,13 +43,28 @@ class RecipeViewSet(ModelViewSet):
         if not user.is_authenticated:
             user = None
 
-        qs = (
+        queryset = (
             Recipe.custom_objects.prefetch_related("ingredients")
             .prefetch_related("author")
             .prefetch_related("tags")
         )
-        qs = qs.with_favorites(user=user).with_cart(user=user)
-        return qs.order_by("-pub_date")
+        queryset = queryset.with_favorites(user=user).with_cart(user=user)
+        return queryset.order_by("-pub_date")
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CreateRecipeSerializer
+        return RecipeSerializer
+
+    # def create(self, request, *args, **kwargs):
+    #     serializer = self.get_serializer(data=request.data)
+    #     serializer.is_valid(raise_exception=True)
+    #     self.perform_create(serializer)
+    #     headers = self.get_success_headers(serializer.data)
+    #     return Response("ok", status=status.HTTP_201_CREATED)
+
+    # def perform_create(self, serializer):
+    #     serializer.save()
 
     def recipe_template_action(self, request, pk=None, related_model=None):
         """Template for similar ViewSet actions."""
