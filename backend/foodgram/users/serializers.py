@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from djoser import serializers as djoser_serializers
 from rest_framework import serializers
 
-from ..users.models import UserFollow
+from ..users.models import UserSubscription
 
 User = get_user_model()
 
@@ -23,7 +23,7 @@ class UserSerializer(djoser_serializers.UserSerializer):
         user = self.context["request"].user
         is_subscribed = False
         if user.is_authenticated:
-            is_subscribed = UserFollow.objects.filter(
+            is_subscribed = UserSubscription.objects.filter(
                 follower=user,
                 following=obj,
             ).exists()

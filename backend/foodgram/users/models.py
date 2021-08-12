@@ -1,21 +1,36 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-from django.db.models import Count, Exists, OuterRef
+from django.db.models import Count, Exists, OuterRef, Prefetch, Subquery
 from django.utils.translation import gettext_lazy as _
 
 
 class UserQuerySet(models.QuerySet):
-    def with_follows(self, user=None):
-        subquery = UserFollow.objects.filter(
+    def with_subscriptions(self, user=None):
+        subquery = UserSubscription.objects.filter(
             follower=user,
-            following=OuterRef("id"),
+            following_id=OuterRef("id"),
         )
         qs = self.annotate(is_subscribed=Exists(subquery))
         return qs
 
     def with_recipes_count(self):
         qs = self.annotate(recipes_count=Count("recipes"))
+        return qs
+
+    def limit_recipes(self, count=None):
+        """
+        If called prefetch "recipes" related attribute to sliced one by.
+        """
+        from ..recipes.models import Recipe
+
+        recipes = Recipe.objects.filter(author__id=OuterRef("author_id"))
+        recipes_sliced_values_qs = recipes.values_list("id", flat=True)[:count]
+        subquery_recipes_ids = Subquery(recipes_sliced_values_qs)
+        recipes_sliced_qs = Recipe.objects.filter(id__in=subquery_recipes_ids)
+
+        prefetch = Prefetch("recipes", queryset=recipes_sliced_qs)
+        qs = self.prefetch_related(prefetch)
         return qs
 
 
@@ -39,7 +54,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ["username"]
 
 
-class UserFollow(models.Model):
+class UserSubscription(models.Model):
     follower = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,

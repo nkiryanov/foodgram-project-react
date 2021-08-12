@@ -136,6 +136,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             )
             for recipeingredient in recipeingredients_data
         )
-
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
+
         return recipe
