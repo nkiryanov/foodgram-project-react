@@ -2,11 +2,14 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
-from foodgram.core.utils import cyrillic_slugify
-from foodgram.recipes.models import (
+
+from ..core.utils import cyrillic_slugify
+from .models import (
     Ingredient,
     MeasurementUnit,
     Recipe,
+    RecipeCart,
+    RecipeFavorite,
     RecipeIngredient,
     RecipeTag,
 )
@@ -109,3 +112,23 @@ class RecipeFactory(factory.django.DjangoModelFactory):
 
         ingredients = Ingredient.objects.order_by("?")[:how_many]
         add_ingredients(self, ingredients)
+
+
+class RecipeCartFactory(factory.django.DjangoModelFactory):
+    """Relates on User on Recipe objects. Be sure there are enough in DB."""
+
+    class Meta:
+        model = RecipeCart
+
+    user = factory.Iterator(User.objects.all())
+    recipe = factory.Iterator(Recipe.objects.all())
+
+
+class RecipeFavoriteFactory(factory.django.DjangoModelFactory):
+    """Relates on User on Recipe objects. Be sure there are enough in DB."""
+
+    class Meta:
+        model = RecipeFavorite
+
+    user = factory.Iterator(User.objects.all())
+    recipe = factory.Iterator(Recipe.objects.all())

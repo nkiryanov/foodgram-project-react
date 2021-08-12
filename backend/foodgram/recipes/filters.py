@@ -1,10 +1,17 @@
+from django.db.models import Q
 from django_filters import rest_framework as filters
 
 from .models import Recipe, RecipeTag
 
 
 class IngredientFilter(filters.FilterSet):
-    name = filters.CharFilter(lookup_expr="icontains")
+    name = filters.CharFilter(method="name_filter")
+
+    def name_filter(self, queryset, name, value):
+        qs = queryset.filter(
+            Q(name__istartswith=value) | Q(name__icontains=value)
+        )
+        return qs
 
 
 class RecipeFilter(filters.FilterSet):
