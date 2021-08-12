@@ -10,8 +10,8 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from .models import Ingredient, Recipe, RecipeCart, RecipeFavorite, RecipeTag
 from .serializers import (
     BaseRecipeSerializer,
-    CreateRecipeSerializer,
     IngredientSerializer,
+    RecipeCreateSerializer,
     RecipeSerializer,
     RecipeTagSerializer,
 )
@@ -52,8 +52,8 @@ class RecipeViewSet(ModelViewSet):
         return queryset.order_by("-pub_date")
 
     def get_serializer_class(self):
-        if self.action == "create":
-            return CreateRecipeSerializer
+        if self.request.method == "POST" or self.request.method == "PATCH":
+            return RecipeCreateSerializer
         return RecipeSerializer
 
     # def create(self, request, *args, **kwargs):
@@ -63,10 +63,10 @@ class RecipeViewSet(ModelViewSet):
     #     headers = self.get_success_headers(serializer.data)
     #     return Response("ok", status=status.HTTP_201_CREATED)
 
-    # def perform_create(self, serializer):
-    #     serializer.save()
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-    def recipe_template_action(self, request, pk=None, related_model=None):
+    def _recipe_action_template(self, request, pk=None, related_model=None):
         """Template for similar ViewSet actions."""
 
         assert (
@@ -105,7 +105,7 @@ class RecipeViewSet(ModelViewSet):
     )
     def favorite(self, request, pk=None):
         related_model = RecipeFavorite
-        return self.recipe_template_action(request, pk, related_model)
+        return self._recipe_action_template(request, pk, related_model)
 
     @action(
         methods=["get", "delete"],
@@ -114,4 +114,4 @@ class RecipeViewSet(ModelViewSet):
     )
     def shopping_cart(self, request, pk=None):
         related_model = RecipeCart
-        return self.recipe_template_action(request, pk, related_model)
+        return self._recipe_action_template(request, pk, related_model)

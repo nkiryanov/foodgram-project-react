@@ -20,6 +20,7 @@ class RecipeTagSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipeTag
         fields = "__all__"
+        read_only_fields = ["color", "name", "slug"]
 
 
 class BaseRecipeSerializer(serializers.ModelSerializer):
@@ -33,19 +34,34 @@ class BaseRecipeSerializer(serializers.ModelSerializer):
         ]
 
 
-class RecipeSerializer(serializers.ModelSerializer):
-    tags = RecipeTagSerializer(many=True)
-    ingredients = IngredientSerializer(many=True)
-    author = UserSerializer()
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+class RecipeIngredientSerializer(serializers.ModelSerializer):
+    id = serializers.SlugRelatedField(
+        source="ingredient",
+        slug_field="id",
+        queryset=Ingredient.objects.all(),
+    )
+    name = serializers.SlugRelatedField(
+        source="ingredient",
+        slug_field="name",
+        read_only=True,
+    )
+    measurement_unit = serializers.SlugRelatedField(
+        source="ingredient.measurement_unit",
+        slug_field="name",
+        read_only=True,
+    )
 
     class Meta:
-        model = Recipe
-        fields = "__all__"
+        model = RecipeIngredient
+        fields = [
+            "id",
+            "name",
+            "measurement_unit",
+            "amount",
+        ]
 
 
-class CreateRecipeRecipeIngredientSerializer(serializers.ModelSerializer):
+class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
     id = serializers.SlugRelatedField(
         source="ingredient",
         slug_field="id",
@@ -60,21 +76,30 @@ class CreateRecipeRecipeIngredientSerializer(serializers.ModelSerializer):
         ]
 
 
-class CreateRecipeRecipeTagSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer):
+    tags = RecipeTagSerializer(many=True)
+    ingredients = RecipeIngredientSerializer(
+        source="recipeingredients",
+        many=True,
+    )
+    author = UserSerializer()
+    is_favorited = serializers.BooleanField(read_only=True)
+    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+
     class Meta:
-        model = RecipeTag
-        fields = ["id"]
+        model = Recipe
+        fields = "__all__"
 
 
-class CreateRecipeSerializer(serializers.ModelSerializer):
+class RecipeCreateSerializer(serializers.ModelSerializer):
     tags = serializers.SlugRelatedField(
         slug_field="id",
         queryset=RecipeTag.objects.all(),
         many=True,
     )
-    ingredients = CreateRecipeRecipeIngredientSerializer(
+    ingredients = RecipeIngredientSerializer(
+        source="recipeingredients",
         many=True,
-        write_only=True,
     )
     image = Base64ImageField(required=True)
 
@@ -91,22 +116,26 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ]
 
     def create(self, validated_data):
-        request = self.context.get("request")
-        validated_data["author"] = request.user
+        """
+        Creates "Recipe" and sets tags and ingredients (recipeingredients) for
+        it. Related objects (tags or ingredients) should be set, not be
+        updated.
+        """
 
-        recipe_ingredients = validated_data.pop("ingredients")
+        recipeingredients_data = validated_data.pop("recipeingredients")
         tags = validated_data.pop("tags")
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
 
-        RecipeIngredient.objects.bulk_create(
+        recipe_ingredients = (
             RecipeIngredient(
                 recipe=recipe,
-                ingredient=recipe_ingredient["ingredient"],
-                amount=recipe_ingredient["amount"],
+                ingredient=recipeingredient["ingredient"],
+                amount=recipeingredient["amount"],
             )
-            for recipe_ingredient in recipe_ingredients
+            for recipeingredient in recipeingredients_data
         )
 
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
         return recipe
