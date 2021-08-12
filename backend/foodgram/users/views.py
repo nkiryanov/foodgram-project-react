@@ -8,14 +8,15 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from .models import UserFollow
+from .filters import SubscriptionFilter
+from .models import UserSubscription
 from .serializers import UserSubscriptionSerializer
 
 User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.extended_objects.with_recipes_count().order_by("id")
+    queryset = User.extended_objects.with_recipes_count()
 
     @action(
         detail=True,
@@ -26,7 +27,7 @@ class CustomUserViewSet(UserViewSet):
         follower = request.user
         following = self.get_object()
 
-        is_subscribed = UserFollow.objects.filter(
+        is_subscribed = UserSubscription.objects.filter(
             follower=follower,
             following=following,
         ).exists()
@@ -36,7 +37,10 @@ class CustomUserViewSet(UserViewSet):
                 raise NotAcceptable("Нельзя подписаться на самого себя.")
             if is_subscribed:
                 raise NotAcceptable("Такая подписка уже есть.")
-            UserFollow.objects.create(follower=follower, following=following)
+            UserSubscription.objects.create(
+                follower=follower,
+                following=following,
+            )
             response_data = UserSubscriptionSerializer(
                 following,
                 context={"request": request},
@@ -47,7 +51,7 @@ class CustomUserViewSet(UserViewSet):
             if not is_subscribed:
                 raise NotFound("Пользователь не подписан.")
 
-            UserFollow.objects.filter(
+            UserSubscription.objects.filter(
                 follower=follower,
                 following=following,
             ).delete()
@@ -55,9 +59,10 @@ class CustomUserViewSet(UserViewSet):
 
 
 class SubscriptionViewSet(ListModelMixin, GenericViewSet):
-    queryset = User.extended_objects.with_recipes_count().order_by("id")
+    queryset = User.extended_objects.with_recipes_count()
     permission_classes = [IsAuthenticated]
     serializer_class = UserSubscriptionSerializer
+    filterset_class = SubscriptionFilter
 
     def get_queryset(self):
         user = self.request.user

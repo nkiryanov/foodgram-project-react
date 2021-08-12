@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='UserFollow',
+            name='UserSubscription',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('follower', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='following', to=settings.AUTH_USER_MODEL, verbose_name='Кто подписался')),
@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddConstraint(
-            model_name='userfollow',
+            model_name='usersubscription',
             constraint=models.UniqueConstraint(fields=('follower', 'following'), name='Unique subscription per follower and author (following)'),
         ),
     ]

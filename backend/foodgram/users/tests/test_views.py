@@ -1,7 +1,7 @@
 from django.urls import reverse
 from rest_framework.test import APIClient, APITestCase
 
-from ..factories import UserFactory, UserFollowFactory
+from ..factories import UserFactory, UserSubscriptionFactory
 
 URL_USERS_LIST = reverse("users-list")
 URL_SUBSRIPRIONS_LIST = reverse("subscriptions-list")
@@ -57,7 +57,7 @@ class UsersViewTests(APITestCase):
 
         user = UsersViewTests.user
         user_who_follow = UserFactory()
-        UserFollowFactory(follower=user, following=user_who_follow)
+        UserSubscriptionFactory(follower=user, following=user_who_follow)
         client = UsersViewTests.authorized_client
 
         USER_DETAIL_URL = reverse("users-detail", args=[user_who_follow.id])

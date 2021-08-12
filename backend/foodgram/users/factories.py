@@ -2,15 +2,15 @@ import factory
 from django.contrib.auth import get_user_model
 from faker import Faker
 
-from .models import UserFollow
+from .models import UserSubscription
 
 User = get_user_model()
 fake = Faker(["ru-RU"])
 
 
-class UserFollowFactory(factory.django.DjangoModelFactory):
+class UserSubscriptionFactory(factory.django.DjangoModelFactory):
     class Meta:
-        model = UserFollow
+        model = UserSubscription
         django_get_or_create = ["follower", "following"]
 
     follower = factory.Iterator(User.objects.all())

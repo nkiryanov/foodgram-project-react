@@ -56,13 +56,6 @@ class RecipeViewSet(ModelViewSet):
             return RecipeCreateSerializer
         return RecipeSerializer
 
-    # def create(self, request, *args, **kwargs):
-    #     serializer = self.get_serializer(data=request.data)
-    #     serializer.is_valid(raise_exception=True)
-    #     self.perform_create(serializer)
-    #     headers = self.get_success_headers(serializer.data)
-    #     return Response("ok", status=status.HTTP_201_CREATED)
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -71,7 +64,7 @@ class RecipeViewSet(ModelViewSet):
 
         assert (
             related_model is not None
-        ), "Связанная модель обязательный параметр."
+        ), "'related_model' (связанная модель) обязательный параметр."
 
         recipe = self.get_object()
         is_related_obj_exists = related_model.objects.filter(
