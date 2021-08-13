@@ -3,7 +3,7 @@ from typing import Any, Optional
 
 from django.core.management.base import BaseCommand
 
-from ...constants import TAGS
+from ....core.constants import TAGS
 from ...factories import RecipeFactory, RecipeTagFactory
 
 
@@ -15,10 +15,10 @@ class Command(BaseCommand):
                 slug=slug,
             )
 
-        for _ in range(150):
+        for _ in range(50):
             num_ingredients = random.randint(1, 10)
             num_tags = random.randint(1, 3)
             RecipeFactory(
-                add_ingredients=num_ingredients,
+                ingredients__num=num_ingredients,
                 tags__num=num_tags,
             )

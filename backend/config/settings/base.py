@@ -123,6 +123,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "foodgram.core.pagination.FoodgramDefaultPagination",
     "PAGE_SIZE": 20,
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S",
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
 

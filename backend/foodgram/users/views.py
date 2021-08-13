@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.extended_objects.with_recipes_count()
+    queryset = User.extended_objects.with_recipes_count().order_by("id")
 
     @action(
         detail=True,
@@ -59,7 +59,7 @@ class CustomUserViewSet(UserViewSet):
 
 
 class SubscriptionViewSet(ListModelMixin, GenericViewSet):
-    queryset = User.extended_objects.with_recipes_count()
+    queryset = User.extended_objects.with_recipes_count().order_by("id")
     permission_classes = [IsAuthenticated]
     serializer_class = UserSubscriptionSerializer
     filterset_class = SubscriptionFilter
