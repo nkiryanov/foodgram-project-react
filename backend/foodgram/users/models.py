@@ -18,11 +18,14 @@ class UserQuerySet(models.QuerySet):
         qs = self.annotate(recipes_count=Count("recipes"))
         return qs
 
-    def limit_recipes(self, count=None):
+    def limit_recipes(self, count: int = None):
         """
         If called prefetch "recipes" related attribute to sliced one by.
+        If count less than 0 then limit by 0.
         """
         from ..recipes.models import Recipe
+
+        count = 0 if count < 0 else count
 
         recipes = Recipe.objects.filter(author__id=OuterRef("author_id"))
         recipes_sliced_values_qs = recipes.values_list("id", flat=True)[:count]

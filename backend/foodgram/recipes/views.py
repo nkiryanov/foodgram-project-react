@@ -52,12 +52,13 @@ class RecipeViewSet(ModelViewSet):
         return queryset.order_by("-pub_date")
 
     def get_serializer_class(self):
-        if self.request.method == "POST" or self.request.method == "PATCH":
+        if (
+            self.action == "create"
+            or self.action == "update"
+            or self.action == "partial_update"
+        ):
             return RecipeCreateSerializer
         return RecipeSerializer
-
-    def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
 
     def _recipe_action_template(self, request, pk=None, related_model=None):
         """Template for similar ViewSet actions."""

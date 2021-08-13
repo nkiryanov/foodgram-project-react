@@ -1,5 +1,8 @@
+from typing import Sequence
+
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from ..users.serializers import UserSerializer
 from .models import Ingredient, Recipe, RecipeIngredient, RecipeTag
@@ -92,6 +95,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     tags = serializers.SlugRelatedField(
         slug_field="id",
         queryset=RecipeTag.objects.all(),
@@ -107,6 +111,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         model = Recipe
         fields = [
             "id",
+            "author",
             "tags",
             "ingredients",
             "image",
@@ -114,6 +119,51 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             "text",
             "cooking_time",
         ]
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Recipe.objects.all(),
+                fields=["author", "name"],
+            ),
+        ]
+
+    def validate_tags(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(
+                "Рецепт не может быть без тегов."
+            )
+        return value
+
+    def validate_ingredients(self, value):
+        if len(value) == 0:
+            raise serializers.ValidationError(
+                "Рецепт не может быть без ингредиентов."
+            )
+        return value
+
+    def _save_related_objects(
+        self,
+        instance: Recipe,
+        tags: Sequence[RecipeTag],
+        recipeingredients: Sequence[RecipeIngredient],
+    ) -> None:
+
+        assert (
+            instance is not None
+            and tags is not None
+            and recipeingredients is not None
+        ), "каждый из параметров должен быть непустым."
+
+        instance.tags.set(tags)
+        RecipeIngredient.objects.filter(recipe=instance).delete()
+        recipe_ingredients = (
+            RecipeIngredient(
+                recipe=instance,
+                ingredient=recipeingredient["ingredient"],
+                amount=recipeingredient["amount"],
+            )
+            for recipeingredient in recipeingredients
+        )
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
         """
@@ -122,20 +172,34 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         updated.
         """
 
-        recipeingredients_data = validated_data.pop("recipeingredients")
+        recipeingredients = validated_data.pop("recipeingredients")
         tags = validated_data.pop("tags")
 
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
 
-        recipe_ingredients = (
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient=recipeingredient["ingredient"],
-                amount=recipeingredient["amount"],
-            )
-            for recipeingredient in recipeingredients_data
+        self._save_related_objects(
+            instance=recipe,
+            tags=tags,
+            recipeingredients=recipeingredients,
         )
-        RecipeIngredient.objects.bulk_create(recipe_ingredients)
-
         return recipe
+
+    def update(self, instance, validated_data):
+        """
+        Assumes that the whole object provided. It doesn't support partial
+        update and overide all related objects.
+        """
+
+        recipeingredients = validated_data.pop("recipeingredients")
+        tags = validated_data.pop("tags")
+
+        for (key, value) in validated_data.items():
+            setattr(instance, key, value)
+        instance.save()
+
+        self._save_related_objects(
+            instance=instance,
+            tags=tags,
+            recipeingredients=recipeingredients,
+        )
+        return instance
