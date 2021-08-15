@@ -75,6 +75,12 @@ class UserSubscription(models.Model):
         verbose_name="На кого подписался",
     )
 
+    def __str__(self):
+        return (
+            f"Подписка '{self.follower.username}' на пользователя "
+            f"{self.following.username}"
+        )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -82,3 +88,5 @@ class UserSubscription(models.Model):
                 name="Unique subscription per follower and author (following)",
             )
         ]
+        verbose_name = "Подписка на пользователя"
+        verbose_name_plural = "Подписки на пользователя"
