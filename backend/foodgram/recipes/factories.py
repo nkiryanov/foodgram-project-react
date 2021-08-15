@@ -2,16 +2,46 @@ import random
 
 import factory
 from django.contrib.auth import get_user_model
-from foodgram.recipes.models import (
+
+from ..core.utils import cyrillic_slugify
+from .models import (
     Ingredient,
+    MeasurementUnit,
     Recipe,
+    RecipeCart,
+    RecipeFavorite,
     RecipeIngredient,
     RecipeTag,
 )
 
-from .utils import cyrillic_slugify
-
 User = get_user_model()
+
+
+def add_ingredients(recipe, ingredients):
+    for ingredient in ingredients:
+        amount = random.randint(1, 50)
+        RecipeIngredient.objects.create(
+            recipe=recipe,
+            ingredient=ingredient,
+            amount=amount,
+        )
+
+
+class MeasurementUnitFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = MeasurementUnit
+        django_get_or_create = ["name"]
+
+    name = factory.Faker("text", max_nb_chars=50)
+
+
+class IngredientFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Ingredient
+        django_get_or_create = ["name"]
+
+    name = factory.Faker("text", max_nb_chars=200)
+    measurement_unit = factory.Iterator(MeasurementUnit.objects.all())
 
 
 class RecipeTagFactory(factory.django.DjangoModelFactory):
@@ -30,7 +60,7 @@ class RecipeFactory(factory.django.DjangoModelFactory):
     """Rely on User and RecipeTag and Ingredient objects.
 
     Creates recipe with at least one tag and ingredient.
-    It supports 'tags__num' and 'add_ingredients' values. If them passed
+    It supports 'tags__num' and 'ingredients__num' values. If them passed
     creates recipes with that values.
     """
 
@@ -40,11 +70,8 @@ class RecipeFactory(factory.django.DjangoModelFactory):
     name = factory.Faker("sentence")
     author = factory.Iterator(User.objects.all())
     image = factory.django.ImageField(color=factory.Faker("color_name"))
-    text = factory.Faker("text")
+    text = factory.Faker("text", max_nb_chars=1000)
     cooking_time = factory.Faker("random_int", max=50)
-
-    def _post_generation_helper():
-        pass
 
     @factory.post_generation
     def tags(self, create, extracted, **kwargs):
@@ -67,21 +94,45 @@ class RecipeFactory(factory.django.DjangoModelFactory):
         self.tags.add(*tags)
 
     @factory.post_generation
-    def add_ingredients(self, create, extracted, **kwargs):
+    def ingredients(self, create, extracted, **kwargs):
+        """
+        Adds ingredients to the recipe. Uses 'add_ingredients'
+        function to create intermediate objects.
+        """
         if not create:
             return
 
-        at_least = 1
+        if extracted:
+            ingredients = extracted
+            add_ingredients(self, ingredients)
+            return
 
-        how_many = extracted or at_least
-        how_many = min(how_many, 20)
+        at_least = 1
+        num = kwargs.get("num", None)
+        how_many = num or at_least
+
+        ingredients_count = Ingredient.objects.count()
+        how_many = min(ingredients_count, how_many)
 
         ingredients = Ingredient.objects.order_by("?")[:how_many]
+        add_ingredients(self, ingredients)
 
-        for ingredient in ingredients:
-            amount = random.randint(1, 100)
-            RecipeIngredient.objects.create(
-                recipe=self,
-                ingredient=ingredient,
-                amount=amount,
-            )
+
+class RecipeCartFactory(factory.django.DjangoModelFactory):
+    """Relates on User on Recipe objects. Be sure there are enough in DB."""
+
+    class Meta:
+        model = RecipeCart
+
+    user = factory.Iterator(User.objects.all())
+    recipe = factory.Iterator(Recipe.objects.all())
+
+
+class RecipeFavoriteFactory(factory.django.DjangoModelFactory):
+    """Relates on User on Recipe objects. Be sure there are enough in DB."""
+
+    class Meta:
+        model = RecipeFavorite
+
+    user = factory.Iterator(User.objects.all())
+    recipe = factory.Iterator(Recipe.objects.all())

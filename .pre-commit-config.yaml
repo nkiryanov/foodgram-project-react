@@ -37,11 +37,11 @@ repos:
       name: Export DEV requirements.txt
       language: system
       pass_filenames: false
-      entry: poetry export --without-hashes --dev --output backend/requirements/dev.txt
-      files: ^(pyproject.toml|poetry.lock)$
+      entry: bash -c "cd backend && poetry export --without-hashes --dev --output requirements/dev.txt"
+      files: ^backend/(pyproject.toml|poetry.lock)$
     - id: export-prod-requirements
       name: Export PROD requirements.txt
       language: system
       pass_filenames: false
-      entry: poetry export --without-hashes --output backend/requirements/prod.txt
-      files: ^(pyproject.toml|poetry.lock)$
+      entry: bash -c "cd backend && poetry export --without-hashes --output requirements/prod.txt"
+      files: ^backend/(pyproject.toml|poetry.lock)$

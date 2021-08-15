@@ -42,6 +42,7 @@ THIRD_PARTY_APPS = [
     "rest_framework.authtoken",
     "djoser",
     "colorfield",
+    "django_filters",
 ]
 LOCAL_APPS = [
     "foodgram.core",
@@ -116,9 +117,13 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
+    ],
     "DEFAULT_PAGINATION_CLASS": "foodgram.core.pagination.FoodgramDefaultPagination",
     "PAGE_SIZE": 20,
     'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%S",
+    "TEST_REQUEST_DEFAULT_FORMAT": "json",
 }
 
 
@@ -128,7 +133,11 @@ DJOSER = {
         "user": "foodgram.users.serializers.UserSerializer",
         "current_user": "foodgram.users.serializers.UserSerializer",
         "user_create": "foodgram.users.serializers.UserCreateSerializer",
-    }
+    },
+    "PERMISSIONS": {
+        "user": ["rest_framework.permissions.AllowAny"],
+        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
+    },
 }
 
 

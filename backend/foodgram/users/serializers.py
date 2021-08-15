@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from djoser import serializers as djoser_serializers
-from foodgram.recipes.models import Recipe
 from rest_framework import serializers
+
+from ..users.models import UserSubscription
 
 User = get_user_model()
 
@@ -9,7 +10,7 @@ User = get_user_model()
 class UserSerializer(djoser_serializers.UserSerializer):
     """Uses djoser's UserSerializer with extra fields."""
 
-    is_subscribed = serializers.BooleanField(read_only=True)
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta(djoser_serializers.UserSerializer.Meta):
         fields = djoser_serializers.UserSerializer.Meta.fields + (
@@ -17,6 +18,16 @@ class UserSerializer(djoser_serializers.UserSerializer):
             "last_name",
             "is_subscribed",
         )
+
+    def get_is_subscribed(self, obj):
+        user = self.context["request"].user
+        is_subscribed = False
+        if user.is_authenticated:
+            is_subscribed = UserSubscription.objects.filter(
+                follower=user,
+                following=obj,
+            ).exists()
+        return is_subscribed
 
 
 class UserCreateSerializer(djoser_serializers.UserCreateSerializer):
@@ -29,18 +40,9 @@ class UserCreateSerializer(djoser_serializers.UserCreateSerializer):
         )
 
 
-class BaseRecipeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Recipe
-        fields = [
-            "id",
-            "name",
-            "image",
-            "cooking_time",
-        ]
+class UserSubscriptionSerializer(UserSerializer):
+    from foodgram.recipes.serializers import BaseRecipeSerializer
 
-
-class SubscriptionSerializer(UserSerializer):
     recipes = BaseRecipeSerializer(many=True)
     recipes_count = serializers.IntegerField()
 

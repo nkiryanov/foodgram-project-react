@@ -2,16 +2,17 @@ from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
 
-from .utils import cyrillic_slugify
+from ..core.utils import cyrillic_slugify
 
 User = get_user_model()
 
 
 class MeasurementUnit(models.Model):
     name = models.CharField(
-        max_length=200,
+        max_length=50,
         unique=True,
         verbose_name="Единица измерения",
     )
@@ -22,6 +23,19 @@ class MeasurementUnit(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+
+class IngredientQuerySet(models.QuerySet):
+    def user_cart(self, user=None):
+        assert user is not None, "'user' is required attribute."
+
+        qs = (
+            self.filter(recipe__cart__user=user)
+            .annotate(amount=Sum("recipeingredients__amount"))
+            .select_related("measurement_unit")
+            .order_by("name")
+        )
+        return qs
 
 
 class Ingredient(models.Model):
@@ -37,6 +51,9 @@ class Ingredient(models.Model):
         verbose_name="Единицы измерения",
     )
 
+    objects = models.Manager()
+    ext_objects = IngredientQuerySet.as_manager()
+
     class Meta:
         ordering = [
             "name",
@@ -45,7 +62,7 @@ class Ingredient(models.Model):
         verbose_name_plural = "Ингредиенты"
 
     def __str__(self):
-        return f"{self.name} ({self.measurement_unit})"
+        return f"{self.name}, ({self.measurement_unit})"
 
 
 class RecipeTag(models.Model):
@@ -69,14 +86,29 @@ class RecipeTag(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    class Meta:
+        ordering = [
+            "name",
+        ]
+        verbose_name = "Тег рецепта"
+        verbose_name_plural = "Теги рецептов"
+
 
 class RecipeQuerySet(models.QuerySet):
-    def with_favorites(self, user):
+    def with_favorites(self, user=None):
         subquery = RecipeFavorite.objects.filter(
             user=user,
             recipe=OuterRef("id"),
         )
         qs = self.annotate(is_favorited=Exists(subquery))
+        return qs
+
+    def with_shopping_cart(self, user=None):
+        subquery = RecipeCart.objects.filter(
+            user=user,
+            recipe=OuterRef("id"),
+        )
+        qs = self.annotate(is_in_shopping_cart=Exists(subquery))
         return qs
 
 
@@ -96,6 +128,7 @@ class Recipe(models.Model):
         verbose_name="Картинка",
     )
     text = models.TextField(
+        max_length=1000,
         verbose_name="Описание рецепта",
     )
     ingredients = models.ManyToManyField(
@@ -122,31 +155,33 @@ class Recipe(models.Model):
     )
 
     objects = models.Manager()
-    custom_objects = RecipeQuerySet.as_manager()
+    ext_objects = RecipeQuerySet.as_manager()
+
+    def __str__(self):
+        return self.name
 
     class Meta:
         ordering = ["-pub_date"]
         constraints = [
             models.UniqueConstraint(
-                fields=("author", "name"), name="unique_recipe_by_author"
+                fields=("author", "name"), name="Unique recipe per author"
             ),
         ]
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
-
-    def __str__(self):
-        return self.name
 
 
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
+        related_name="recipeingredients",
         verbose_name="Рецепт",
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.RESTRICT,
+        related_name="recipeingredients",
         verbose_name="Ингредиент",
     )
     amount = models.PositiveIntegerField(
@@ -157,12 +192,12 @@ class RecipeIngredient(models.Model):
         ],
     )
 
+    def __str__(self):
+        return f"{self.ingredient} в {self.recipe}"
+
     class Meta:
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
-
-    def __str__(self):
-        return f"{self.ingredient} в {self.recipe}"
 
 
 class RecipeFavorite(models.Model):
@@ -190,4 +225,35 @@ class RecipeFavorite(models.Model):
         verbose_name_plural = "Объекты избранного"
 
     def __str__(self):
-        return f"Избранный {self.recipe} у {self.user}"
+        return f"Избранное — '{self.recipe.name}' у '{self.user.username}'"
+
+
+class RecipeCart(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="cart",
+        verbose_name="Пользователь",
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name="cart",
+        verbose_name="Рецепт",
+    )
+
+    def __str__(self):
+        return (
+            f"Рецепт '{self.recipe.name}' из корзины покупок "
+            f"у {self.user.username}"
+        )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("user", "recipe"),
+                name="Unique RecipeCart per user and recipe",
+            ),
+        ]
+        verbose_name = "Объект корзины покупок"
+        verbose_name_plural = "Объекты корзины покупок"

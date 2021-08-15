@@ -8,7 +8,7 @@ MEDIA_URL = settings.MEDIA_URL
 MEDIA_ROOT = settings.MEDIA_ROOT
 
 
-extra_patterns = [
+api_patterns = [
     path("", include("foodgram.users.urls")),
     path("", include("foodgram.recipes.urls")),
 ]
@@ -20,7 +20,7 @@ urlpatterns = [
     ),
     path(
         route="api/",
-        view=include(extra_patterns),
+        view=include(api_patterns),
     ),
 ] + static(MEDIA_URL, document_root=MEDIA_ROOT)
 

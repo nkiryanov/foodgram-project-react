@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block static_css %}
+<style>
+    @font-face {
+        font-family: Montserrat;
+        src: url("{{STATIC_ROOT}}/fonts/Montserrat-Regular.ttf");
+    }
+
+    * {
+        font-family: Montserrat;
+    }
+</style>
+{% endblock %}
+
+{% block page_title %}
+Список покупок
+{% endblock %}
+
+{% block content %}
+<div>
+    <h1>Список покупок</h1>
+</div>
+
+<div>
+    <ul>
+        {% for ingredient in ingredient_list %}
+        {% include 'includes/ingredient_item.html' with ingredient=ingredient %}
+        {% endfor %}
+    </ul>
+
+
+</div>
+{% endblock %}
