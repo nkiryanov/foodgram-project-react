@@ -32,8 +32,8 @@ User = get_user_model()
 
 class RecipeViewTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         cls.user = UserFactory()
         cls.other_user = UserFactory()
 
@@ -131,6 +131,11 @@ class RecipeViewTests(APITestCase):
         )
 
     def test_user_can_delete_favorite_recipe(self):
+        """
+        Sends 'DELETE' request to 'favorite' url and checks
+            - status code
+            - whether "RecipeFavorite" object was deleted
+        """
         user = RecipeViewTests.user
         recipe = RecipeFactory(author=RecipeViewTests.other_user)
         RecipeFavorite.objects.create(
@@ -164,8 +169,8 @@ class RecipeViewTests(APITestCase):
 @override_settings(MEDIA_ROOT=TEMP_DIR)
 class RecipeCreateViewTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
 
         MeasurementUnitFactory.create_batch(5)
 

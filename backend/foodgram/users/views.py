@@ -45,7 +45,7 @@ class CustomUserViewSet(UserViewSet):
                 following,
                 context={"request": request},
             )
-            return Response(response_data.data)
+            return Response(response_data.data, status=status.HTTP_201_CREATED)
 
         if request.method == "DELETE":
             if not is_subscribed:
@@ -55,7 +55,7 @@ class CustomUserViewSet(UserViewSet):
                 follower=follower,
                 following=following,
             ).delete()
-            return Response("OK", status.HTTP_201_CREATED)
+            return Response("OK", status=status.HTTP_201_CREATED)
 
 
 class SubscriptionViewSet(ListModelMixin, GenericViewSet):

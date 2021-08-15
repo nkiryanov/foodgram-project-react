@@ -19,8 +19,8 @@ URL_INGREDIENTS_LIST = reverse("ingredients-list")
 
 class RecipesFilterTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
 
         MeasurementUnitFactory.create_batch(5)
         IngredientFactory.create_batch(10)

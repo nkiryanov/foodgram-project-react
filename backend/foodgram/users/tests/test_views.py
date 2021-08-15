@@ -1,4 +1,6 @@
 from django.urls import reverse
+from foodgram.users.models import UserSubscription
+from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
 from ..factories import UserFactory, UserSubscriptionFactory
@@ -10,8 +12,8 @@ URL_USER_DETAIL = reverse("users-detail", args=[1])
 
 class UsersViewTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         cls.user = UserFactory()
 
         cls.unauthorized_client = APIClient()
@@ -89,4 +91,139 @@ class UsersViewTests(APITestCase):
                 "Пользователь, на кого не подписан должен иметь флаг "
                 "'is_subscribed': false ."
             ),
+        )
+
+    def test_user_can_subscribe_to_other_user(self):
+        """
+        Sends 'GET' request to 'subscribe' url and checks
+            - status code
+            - whether "UserSubscription" object was created
+        """
+
+        following = UserFactory()
+        follower = UsersViewTests.user
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.get(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            msg="Удачная подписка на пользователя должна возвращать код 201.",
+        )
+
+        is_follower_follows_following = UserSubscription.objects.filter(
+            follower=follower,
+            following=following,
+        ).exists()
+
+        self.assertTrue(
+            is_follower_follows_following,
+            msg="Убедитесь, что удалось подписать и объект подписки создан.",
+        )
+
+    def test_user_can_unsubscribe_from_other_user(self):
+        """
+        Sends 'DELETE' request to 'subscribe' url and checks
+            - status code
+            - whether "UserSubscription" object was deleted
+        """
+        follower = UsersViewTests.user
+        following = UserFactory()
+        UserSubscriptionFactory(follower=follower, following=following)
+
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.delete(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            msg="Удачная отписка возвращает код 201.",
+        )
+
+        is_follower_follows_following = UserSubscription.objects.filter(
+            follower=follower,
+            following=following,
+        ).exists()
+
+        self.assertFalse(
+            is_follower_follows_following,
+            msg="Убедитесь, что объект подписки удален.",
+        )
+
+    def test_user_cant_subscribe_to_himself(self):
+        """
+        Sends 'GET' request to SELF 'subscribe' url and checks
+            - status code
+            - whether "UserSubscription" object was not created
+        """
+
+        follower = UsersViewTests.user
+        following = follower
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.get(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_406_NOT_ACCEPTABLE,
+            msg="Попытка подписать на себя должна вернуть код 406.",
+        )
+
+        is_follower_follows_following = UserSubscription.objects.filter(
+            follower=follower,
+            following=following,
+        ).exists()
+
+        self.assertFalse(
+            is_follower_follows_following,
+            msg=(
+                "Убедитесь, что при попытке подписать на себя не создается "
+                "объект подписки."
+            ),
+        )
+
+    def test_user_cant_subscribe_twice(self):
+        """
+        Sends 'GET' request to SELF 'subscribe' url and checks
+            - status code
+            - whether "UserSubscription" object was not created
+        """
+
+        follower = UsersViewTests.user
+        following = UserFactory()
+        UserSubscriptionFactory(follower=follower, following=following)
+
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.get(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_406_NOT_ACCEPTABLE,
+            msg="При попытке подписаться дважды должен вернуться код 406.",
+        )
+
+        count_follower_follows_following = UserSubscription.objects.filter(
+            follower=follower,
+            following=following,
+        ).count()
+
+        self.assertEqual(
+            count_follower_follows_following,
+            1,
+            msg="Убедитесь, что объект подписки есть, но только один.",
         )
