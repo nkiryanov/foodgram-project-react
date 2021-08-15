@@ -8,8 +8,8 @@ User = get_user_model()
 
 class UserModelTest(TestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         UserFactory(email="user1@email.ru")
 
     def test_email_is_required_field(self):

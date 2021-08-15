@@ -32,8 +32,8 @@ User = get_user_model()
 
 class RecipeViewTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         cls.user = UserFactory()
         cls.other_user = UserFactory()
 
@@ -169,8 +169,8 @@ class RecipeViewTests(APITestCase):
 @override_settings(MEDIA_ROOT=TEMP_DIR)
 class RecipeCreateViewTests(APITestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
 
         MeasurementUnitFactory.create_batch(5)
 

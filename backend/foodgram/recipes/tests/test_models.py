@@ -15,8 +15,8 @@ from ..models import Recipe
 
 class RecipeModelTest(TestCase):
     @classmethod
-    def setUpClass(cls) -> None:
-        super().setUpClass()
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
         cls.user_1 = UserFactory(email="user_1@email.ru")
         cls.user_2 = UserFactory(email="user_2@email.ru")
 
