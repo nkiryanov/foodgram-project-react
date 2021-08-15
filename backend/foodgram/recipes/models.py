@@ -61,7 +61,7 @@ class Ingredient(models.Model):
         verbose_name_plural = "Ингредиенты"
 
     def __str__(self):
-        return f"{self.name} ({self.measurement_unit})"
+        return f"{self.name}, ({self.measurement_unit})"
 
 
 class RecipeTag(models.Model):
@@ -102,7 +102,7 @@ class RecipeQuerySet(models.QuerySet):
         qs = self.annotate(is_favorited=Exists(subquery))
         return qs
 
-    def with_cart(self, user=None):
+    def with_shopping_cart(self, user=None):
         subquery = RecipeCart.objects.filter(
             user=user,
             recipe=OuterRef("id"),
@@ -156,18 +156,18 @@ class Recipe(models.Model):
     objects = models.Manager()
     ext_objects = RecipeQuerySet.as_manager()
 
+    def __str__(self):
+        return self.name
+
     class Meta:
         ordering = ["-pub_date"]
         constraints = [
             models.UniqueConstraint(
-                fields=("author", "name"), name="unique_recipe_by_author"
+                fields=("author", "name"), name="Unique recipe per author"
             ),
         ]
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
-
-    def __str__(self):
-        return self.name
 
 
 class RecipeIngredient(models.Model):
@@ -191,12 +191,12 @@ class RecipeIngredient(models.Model):
         ],
     )
 
+    def __str__(self):
+        return f"{self.ingredient} в {self.recipe}"
+
     class Meta:
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
-
-    def __str__(self):
-        return f"{self.ingredient} в {self.recipe}"
 
 
 class RecipeFavorite(models.Model):
@@ -224,7 +224,7 @@ class RecipeFavorite(models.Model):
         verbose_name_plural = "Объекты избранного"
 
     def __str__(self):
-        return f"Избранный {self.recipe} у {self.user}"
+        return f"Избранное — '{self.recipe.name}' у '{self.user.username}'"
 
 
 class RecipeCart(models.Model):
@@ -241,6 +241,12 @@ class RecipeCart(models.Model):
         verbose_name="Рецепт",
     )
 
+    def __str__(self):
+        return (
+            f"Рецепт '{self.recipe.name}' из корзины покупок "
+            f"у {self.user.username}"
+        )
+
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -250,6 +256,3 @@ class RecipeCart(models.Model):
         ]
         verbose_name = "Объект корзины покупок"
         verbose_name_plural = "Объекты корзины покупок"
-
-    def __str__(self):
-        return f"Рецепт {self.recipe} из корзины покупок у {self.user}"

@@ -12,5 +12,9 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
     search_fields = ["follower__username", "following__username"]
 
 
+class ExtendedUserAdmin(UserAdmin):
+    list_filter = ["email", "username"]
+
+
 admin.site.register(User, UserAdmin)
 admin.site.register(UserSubscription, UserSubscriptionAdmin)

@@ -11,8 +11,8 @@ URL_SUBSRIPRIONS_LIST = reverse("subscriptions-list")
 
 class UserURLTests(APITestCase):
     @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
+    def setUpClass(cls) -> None:
+        super().setUpClass()
         cls.user = UserFactory()
 
         cls.unauthorized_client = APIClient()

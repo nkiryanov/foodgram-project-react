@@ -23,7 +23,7 @@ class CustomUserViewSet(UserViewSet):
         methods=["get", "delete"],
         permission_classes=[IsAuthenticated],
     )
-    def subscribe(self, request):
+    def subscribe(self, request, id=None):
         follower = request.user
         following = self.get_object()
 
