@@ -25,9 +25,6 @@ class RecipesFilterTests(APITestCase):
         MeasurementUnitFactory.create_batch(5)
         IngredientFactory.create_batch(10)
 
-    @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
         cls.user = UserFactory()
         cls.tag1 = RecipeTagFactory(slug="tag1")
         cls.tag2 = RecipeTagFactory(slug="tag2")

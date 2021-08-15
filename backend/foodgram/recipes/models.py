@@ -102,7 +102,7 @@ class RecipeQuerySet(models.QuerySet):
         qs = self.annotate(is_favorited=Exists(subquery))
         return qs
 
-    def with_cart(self, user=None):
+    def with_shopping_cart(self, user=None):
         subquery = RecipeCart.objects.filter(
             user=user,
             recipe=OuterRef("id"),
@@ -160,7 +160,7 @@ class Recipe(models.Model):
         ordering = ["-pub_date"]
         constraints = [
             models.UniqueConstraint(
-                fields=("author", "name"), name="unique_recipe_by_author"
+                fields=("author", "name"), name="Unique recipe per author"
             ),
         ]
         verbose_name = "Рецепт"

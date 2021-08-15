@@ -1,5 +1,6 @@
 from tempfile import mkdtemp as tempfile_mkdtemp
 
+from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase, override_settings
@@ -26,20 +27,15 @@ SMALL_GIF = (
     "yxOyYQAAAABJRU5ErkJggg=="
 )
 
+User = get_user_model()
+
 
 class RecipeViewTests(APITestCase):
     @classmethod
     def setUpClass(cls) -> None:
         super().setUpClass()
-
-        MeasurementUnitFactory.create_batch(5)
-        IngredientFactory.create_batch(10)
-        RecipeTagFactory.create_batch(3)
-
-    @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
         cls.user = UserFactory()
+        cls.other_user = UserFactory()
 
         RecipeFactory.create_batch(10, author=cls.user)
 
@@ -110,7 +106,7 @@ class RecipeViewTests(APITestCase):
             - status code
             - whether "RecipeFavorite" object was created
         """
-        recipe = RecipeFactory()
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
         client = RecipeViewTests.authorized_client
         recipe_favorite_url = reverse("recipes-favorite", args=[recipe.id])
 
@@ -136,7 +132,7 @@ class RecipeViewTests(APITestCase):
 
     def test_user_can_delete_favorite_recipe(self):
         user = RecipeViewTests.user
-        recipe = RecipeFactory()
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
         RecipeFavorite.objects.create(
             user=user,
             recipe=recipe,
@@ -168,8 +164,9 @@ class RecipeViewTests(APITestCase):
 @override_settings(MEDIA_ROOT=TEMP_DIR)
 class RecipeCreateViewTests(APITestCase):
     @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
+    def setUpClass(cls) -> None:
+        super().setUpClass()
+
         MeasurementUnitFactory.create_batch(5)
 
         cls.ingredient_1 = IngredientFactory()

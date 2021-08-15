@@ -50,7 +50,9 @@ class RecipeViewSet(ModelViewSet):
             user = None
 
         queryset = super().get_queryset()
-        queryset = queryset.with_favorites(user=user).with_cart(user=user)
+        queryset = queryset.with_favorites(user=user).with_shopping_cart(
+            user=user
+        )
         return queryset
 
     def get_serializer_class(self):

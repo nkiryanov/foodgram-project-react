@@ -24,10 +24,6 @@ class RecipesURLTests(APITestCase):
         MeasurementUnitFactory.create_batch(5)
         IngredientFactory.create_batch(10)
         RecipeTagFactory.create_batch(3)
-
-    @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
         cls.user = UserFactory()
 
         RecipeFactory.create_batch(10, author=cls.user)

@@ -10,8 +10,8 @@ URL_USER_DETAIL = reverse("users-detail", args=[1])
 
 class UsersViewTests(APITestCase):
     @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
+    def setUpClass(cls) -> None:
+        super().setUpClass()
         cls.user = UserFactory()
 
         cls.unauthorized_client = APIClient()

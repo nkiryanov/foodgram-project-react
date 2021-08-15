@@ -95,6 +95,10 @@ class RecipeFactory(factory.django.DjangoModelFactory):
 
     @factory.post_generation
     def ingredients(self, create, extracted, **kwargs):
+        """
+        Adds ingredients to the recipe. Uses 'add_ingredients'
+        function to create intermediate objects.
+        """
         if not create:
             return
 
