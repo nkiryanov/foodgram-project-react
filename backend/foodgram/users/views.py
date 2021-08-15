@@ -16,14 +16,14 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.extended_objects.with_recipes_count().order_by("id")
+    queryset = User.ext_objects.with_recipes_count()
 
     @action(
         detail=True,
         methods=["get", "delete"],
         permission_classes=[IsAuthenticated],
     )
-    def subscribe(self, request, id=None):
+    def subscribe(self, request):
         follower = request.user
         following = self.get_object()
 
@@ -59,7 +59,12 @@ class CustomUserViewSet(UserViewSet):
 
 
 class SubscriptionViewSet(ListModelMixin, GenericViewSet):
-    queryset = User.extended_objects.with_recipes_count().order_by("id")
+    """
+    Returns following list of users with their recipes. The number of
+    user's recipes could be limited with filter.
+    """
+
+    queryset = User.ext_objects.with_recipes_count()
     permission_classes = [IsAuthenticated]
     serializer_class = UserSubscriptionSerializer
     filterset_class = SubscriptionFilter

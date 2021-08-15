@@ -137,3 +137,7 @@ dmypy.json
 
 # Media
 *media/
+
+# Static
+*staticfiles/
+*static/

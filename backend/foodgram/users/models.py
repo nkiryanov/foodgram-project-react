@@ -20,8 +20,9 @@ class UserQuerySet(models.QuerySet):
 
     def limit_recipes(self, count: int = None):
         """
-        If called prefetch "recipes" related attribute to sliced one by.
-        If count less than 0 then limit by 0.
+        Prefetch user's list with their recipes.
+        The number of user's recipes is limited with 'count'.
+        If 'count' attribute is less than 0 then 0 recipes returns.
         """
         from ..recipes.models import Recipe
 
@@ -51,10 +52,13 @@ class User(AbstractUser):
     )
 
     objects = UserManager()
-    extended_objects = CustomUserManager()
+    ext_objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
+
+    class Meta:
+        ordering = ["id"]
 
 
 class UserSubscription(models.Model):

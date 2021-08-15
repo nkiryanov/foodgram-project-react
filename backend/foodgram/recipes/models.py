@@ -2,6 +2,7 @@ from colorfield.fields import ColorField
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
 from foodgram.core.utils import cyrillic_slugify
 
@@ -23,6 +24,19 @@ class MeasurementUnit(models.Model):
         return f"{self.name}"
 
 
+class IngredientQuerySet(models.QuerySet):
+    def user_cart(self, user=None):
+        assert user is not None, "'user' is required attribute."
+
+        qs = (
+            self.filter(recipe__cart__user=user)
+            .annotate(amount=Sum("recipeingredients__amount"))
+            .select_related("measurement_unit")
+            .order_by("name")
+        )
+        return qs
+
+
 class Ingredient(models.Model):
     name = models.CharField(
         max_length=200,
@@ -35,6 +49,9 @@ class Ingredient(models.Model):
         related_name="ingredients",
         verbose_name="Единицы измерения",
     )
+
+    objects = models.Manager()
+    ext_objects = IngredientQuerySet.as_manager()
 
     class Meta:
         ordering = [
@@ -67,6 +84,13 @@ class RecipeTag(models.Model):
 
     def __str__(self):
         return f"{self.name}"
+
+    class Meta:
+        ordering = [
+            "name",
+        ]
+        verbose_name = "Тег рецепта"
+        verbose_name_plural = "Теги рецептов"
 
 
 class RecipeQuerySet(models.QuerySet):
@@ -130,7 +154,7 @@ class Recipe(models.Model):
     )
 
     objects = models.Manager()
-    custom_objects = RecipeQuerySet.as_manager()
+    ext_objects = RecipeQuerySet.as_manager()
 
     class Meta:
         ordering = ["-pub_date"]
