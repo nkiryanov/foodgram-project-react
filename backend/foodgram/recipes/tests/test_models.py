@@ -10,7 +10,7 @@ from ..factories import (
     RecipeFavoriteFactory,
     RecipeTagFactory,
 )
-from ..models import Recipe
+from ..models import Ingredient, Recipe
 
 
 class RecipeModelTest(TestCase):
@@ -26,7 +26,7 @@ class RecipeModelTest(TestCase):
         cls.ingredient_1 = IngredientFactory(name="колбаса")
         cls.ingredient_2 = IngredientFactory(name="землица")
 
-        cls.user_1_recipes = RecipeFactory.create_batch(
+        cls.same_ingredient_recipes = RecipeFactory.create_batch(
             10, author=cls.user_1, ingredients=[cls.ingredient_1]
         )
 
@@ -59,7 +59,9 @@ class RecipeModelTest(TestCase):
         )
 
     def test_is_favorited_value(self):
-        """Recipe in favorites should have attribute 'is_favorite' = True."""
+        """
+        Recipe in user's favorites should have attribute 'is_favorite' = True.
+        """
 
         user = RecipeModelTest.user_1
         recipe_1 = RecipeFactory(name="Рецепт который в избранном")
@@ -86,7 +88,7 @@ class RecipeModelTest(TestCase):
 
     def test_is_in_shopping_cart_value(self):
         """
-        Recipe in shopping cart should have attribute
+        Recipe in user's shopping cart should have attribute
         'is_in_shopping_cart' = True.
         """
 
@@ -131,7 +133,7 @@ class RecipeModelTest(TestCase):
         ):
             recipe_with_same_author_and_name.full_clean()
 
-    def test_recipe_favorite_user_and_recipe_is_unique(self):
+    def test_recipefavorite_unique_fields(self):
         """Tries to clean the favorite with same user and recipe."""
         user = RecipeModelTest.user_1
         recipe = RecipeFactory()
@@ -155,7 +157,7 @@ class RecipeModelTest(TestCase):
         ):
             same_favorite_recipe_per_author.full_clean()
 
-    def test_recipe_in_shopping_cart_user_and_recipe_is_unique(self):
+    def test_recipecart_model_unique_fields(self):
         """
         Tries to clean the recipe in shopping cart with same user and recipe.
         """
@@ -180,3 +182,83 @@ class RecipeModelTest(TestCase):
             ),
         ):
             same_in_shopping_cart_recipe_per_author.full_clean()
+
+    def test_ingredient_user_cart_queryset_duplicates(self):
+        """User's shopping cart queryset should has not have duplicates."""
+        user = RecipeModelTest.user_1
+        same_ingredients_recipe_1 = RecipeModelTest.same_ingredient_recipes[1]
+        same_ingredients_recipe_2 = RecipeModelTest.same_ingredient_recipes[2]
+
+        RecipeCartFactory(user=user, recipe=same_ingredients_recipe_1)
+        RecipeCartFactory(user=user, recipe=same_ingredients_recipe_2)
+
+        shopping_cart_ingredients = Ingredient.ext_objects.user_cart(user=user)
+
+        self.assertEqual(
+            shopping_cart_ingredients.count(),
+            1,
+            msg=(
+                "Должны возвращать список из 1 ингредиента. В списке "
+                "покупок 2 рецепта, но из одного и только одного ингредиента."
+            ),
+        )
+
+    def test_ingredient_user_cart_queryset_only_users_shopping_cart(self):
+        """Have only ingredients from user's shopping list. Not others."""
+
+        user = RecipeModelTest.user_1
+        other_user = RecipeModelTest.user_2
+        other_ingredient = RecipeModelTest.ingredient_2
+        recipe = RecipeModelTest.same_ingredient_recipes[1]
+        recipe_with_other_ingredient = RecipeFactory(
+            author=user,
+            ingredients=[other_ingredient],
+        )
+
+        RecipeCartFactory(user=user, recipe=recipe)
+        RecipeCartFactory(user=other_user, recipe=recipe_with_other_ingredient)
+
+        shopping_cart_ingredients = Ingredient.ext_objects.user_cart(user=user)
+
+        self.assertEqual(
+            shopping_cart_ingredients.count(),
+            1,
+            msg=(
+                "Должны возвращать список из 1 ингредиента. Рецепт со вторым "
+                "ингредиентом в списке покупок другого пользователя."
+            ),
+        )
+
+    def test_ingredient_user_cart_queryset_amount_field(self):
+        """Field 'amount' has Sum amount ingredients."""
+        user = RecipeModelTest.user_1
+        ingredient = RecipeModelTest.ingredient_1
+        recipe_1 = RecipeFactory()
+        recipe_2 = RecipeFactory()
+
+        default_amount = {"amount": 3}
+
+        recipe_1.ingredients.set(
+            [ingredient],
+            clear=True,
+            through_defaults=default_amount,
+        )
+        recipe_2.ingredients.set(
+            [ingredient],
+            clear=True,
+            through_defaults=default_amount,
+        )
+
+        RecipeCartFactory(user=user, recipe=recipe_1)
+        RecipeCartFactory(user=user, recipe=recipe_2)
+
+        ingredient = Ingredient.ext_objects.user_cart(user=user).first()
+
+        self.assertEqual(
+            ingredient.amount,
+            6,
+            msg=(
+                "В списоке покупок два рецепта с одним ингредиентом с "
+                "значением 'amount'=3. Должна возвращаться сумма (6)."
+            ),
+        )

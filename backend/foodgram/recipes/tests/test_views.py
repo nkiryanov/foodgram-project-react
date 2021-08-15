@@ -9,6 +9,7 @@ from ...users.factories import UserFactory
 from ..factories import (
     IngredientFactory,
     MeasurementUnitFactory,
+    RecipeCartFactory,
     RecipeFactory,
     RecipeTagFactory,
 )
@@ -18,6 +19,7 @@ TEMP_DIR = tempfile_mkdtemp()
 
 URL_RECIPES_LIST = reverse("recipes-list")
 URL_RECIPES_DETAIL = reverse("recipes-detail", args=[1])
+URL_DOWNLOAD_SHOPPING_CART = reverse("recipes-download-shopping-cart")
 URL_TAGS_LIST = reverse("tags-list")
 URL_INGREDIENTS_LIST = reverse("ingredients-list")
 
@@ -36,6 +38,9 @@ class RecipeViewTests(APITestCase):
         super().setUpTestData()
         cls.user = UserFactory()
         cls.other_user = UserFactory()
+
+        MeasurementUnitFactory.create_batch(5)
+        IngredientFactory.create_batch(5)
 
         RecipeFactory.create_batch(10, author=cls.user)
 
@@ -163,6 +168,39 @@ class RecipeViewTests(APITestCase):
         self.assertFalse(
             is_recipe_favorite,
             msg="Убедитесь, что рецепт удаляется из избранного.",
+        )
+
+    def test_authorized_user_download_shopping_cart(self):
+        recipe = RecipeFactory()
+        user = RecipeViewTests.user
+        RecipeCartFactory(user=user, recipe=recipe)
+
+        client = RecipeViewTests.authorized_client
+        response = client.get(
+            path=URL_DOWNLOAD_SHOPPING_CART,
+        )
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_200_OK,
+            msg="Удачная загрузка должна возвращать код 200.",
+        )
+
+        self.assertEqual(
+            response.headers.get("Content-Type"),
+            "application/pdf",
+            msg="Содержимое документа должен быть документ PDF.",
+        )
+
+    def test_cant_download_empty_shopping_cart(self):
+        """Download shopping cart should return 404 if list is empty."""
+        client = RecipeViewTests.authorized_client
+        response = client.get(path=URL_DOWNLOAD_SHOPPING_CART)
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg="Пустой список покупок должен возвращать 404.",
         )
 
 
@@ -356,4 +394,45 @@ class RecipeCreateViewTests(APITestCase):
             recipe.name,
             "Новое имя",
             msg="Убедитесь, что данные обновляются в том же рецепте.",
+        )
+
+    def test_recipe_not_author_cant_patch_recipe(self):
+        """Patchs existed recipe with same new name."""
+        author = RecipeCreateViewTests.user
+        other_user = UserFactory()
+        recipe = RecipeFactory(author=author, name="Старое имя")
+        updated_data = {
+            "ingredients": [
+                RecipeCreateViewTests.recipeingredient_1,
+            ],
+            "tags": [RecipeCreateViewTests.tag2.id],
+            "image": SMALL_GIF,
+            "name": "Новое имя",
+            "text": "НОВОЕ Описание рецепта длинное.",
+            "cooking_time": "10",
+        }
+        client = APIClient()
+        client.force_authenticate(user=other_user)
+
+        url_recipe_patch = reverse("recipes-detail", args=[recipe.id])
+
+        response = client.patch(
+            url_recipe_patch,
+            data=updated_data,
+            format="json",
+        )
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_403_FORBIDDEN,
+            msg=(
+                "Запрос на изменение рецепта пользователем отличным от "
+                "должен возвращать ошибку 403."
+            ),
+        )
+
+        recipe.refresh_from_db()
+        self.assertEqual(
+            recipe.name,
+            "Старое имя",
+            msg="Убедитесь, что данные в рецепте не изменены.",
         )
