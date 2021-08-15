@@ -4,11 +4,15 @@ from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAcceptable, NotFound
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from xhtml2pdf import pisa
 
+from ..users.permissions import IsAuthor, ReadOnly
 from .filters import IngredientFilter, RecipeFilter
 from .models import Ingredient, Recipe, RecipeCart, RecipeFavorite, RecipeTag
 from .serializers import (
@@ -23,7 +27,7 @@ from .serializers import (
 class RecipeTagViewSet(ReadOnlyModelViewSet):
     queryset = RecipeTag.objects.all()
     serializer_class = RecipeTagSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     pagination_class = None
 
 
@@ -31,7 +35,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     pagination_class = None
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly]
     filterset_class = IngredientFilter
 
 
@@ -41,7 +45,7 @@ class RecipeViewSet(ModelViewSet):
         .prefetch_related("author")
         .prefetch_related("tags")
     )
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor | ReadOnly]
     filterset_class = RecipeFilter
 
     def get_queryset(self):
@@ -56,11 +60,7 @@ class RecipeViewSet(ModelViewSet):
         return queryset
 
     def get_serializer_class(self):
-        if (
-            self.action == "create"
-            or self.action == "update"
-            or self.action == "partial_update"
-        ):
+        if self.action == "create" or self.action == "partial_update":
             return RecipeCreateSerializer
         return RecipeSerializer
 
@@ -126,6 +126,10 @@ class RecipeViewSet(ModelViewSet):
         """
         user = request.user
         queryset = Ingredient.ext_objects.user_cart(user=user)
+
+        if not queryset.exists():
+            raise NotFound("Список покупок пустой.")
+
         context = {"ingredient_list": queryset}
         context["STATIC_ROOT"] = settings.STATIC_ROOT
 
