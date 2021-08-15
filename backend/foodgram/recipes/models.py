@@ -4,7 +4,8 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
-from foodgram.core.utils import cyrillic_slugify
+
+from ..core.utils import cyrillic_slugify
 
 User = get_user_model()
 

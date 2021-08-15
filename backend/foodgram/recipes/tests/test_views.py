@@ -131,6 +131,11 @@ class RecipeViewTests(APITestCase):
         )
 
     def test_user_can_delete_favorite_recipe(self):
+        """
+        Sends 'DELETE' request to 'favorite' url and checks
+            - status code
+            - whether "RecipeFavorite" object was deleted
+        """
         user = RecipeViewTests.user
         recipe = RecipeFactory(author=RecipeViewTests.other_user)
         RecipeFavorite.objects.create(
