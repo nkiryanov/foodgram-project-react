@@ -1,12 +1,15 @@
-from django.contrib.auth import get_user_model
-from foodgram.recipes.filters import IngredientFilter, RecipeFilter
+from django.conf import settings
+from django.http import HttpResponse
+from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotAcceptable, NotFound
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from xhtml2pdf import pisa
 
+from .filters import IngredientFilter, RecipeFilter
 from .models import Ingredient, Recipe, RecipeCart, RecipeFavorite, RecipeTag
 from .serializers import (
     BaseRecipeSerializer,
@@ -15,8 +18,6 @@ from .serializers import (
     RecipeSerializer,
     RecipeTagSerializer,
 )
-
-User = get_user_model()
 
 
 class RecipeTagViewSet(ReadOnlyModelViewSet):
@@ -35,6 +36,11 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
+    queryset = (
+        Recipe.ext_objects.prefetch_related("ingredients")
+        .prefetch_related("author")
+        .prefetch_related("tags")
+    )
     permission_classes = [AllowAny]
     filterset_class = RecipeFilter
 
@@ -43,13 +49,9 @@ class RecipeViewSet(ModelViewSet):
         if not user.is_authenticated:
             user = None
 
-        queryset = (
-            Recipe.custom_objects.prefetch_related("ingredients")
-            .prefetch_related("author")
-            .prefetch_related("tags")
-        )
+        queryset = super().get_queryset()
         queryset = queryset.with_favorites(user=user).with_cart(user=user)
-        return queryset.order_by("-pub_date")
+        return queryset
 
     def get_serializer_class(self):
         if (
@@ -98,6 +100,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def favorite(self, request, pk=None):
+        """Add or remove recipe to user's favorite list."""
         related_model = RecipeFavorite
         return self._recipe_action_template(request, pk, related_model)
 
@@ -107,5 +110,31 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated],
     )
     def shopping_cart(self, request, pk=None):
+        """Add or remove recipe in user's shopping cart."""
         related_model = RecipeCart
         return self._recipe_action_template(request, pk, related_model)
+
+    @action(
+        detail=False,
+        permission_classes=[IsAuthenticated],
+    )
+    def download_shopping_cart(self, request):
+        """
+        Generate and return list of ingredient's form user's shopping cart.
+        """
+        user = request.user
+        queryset = Ingredient.ext_objects.user_cart(user=user)
+        context = {"ingredient_list": queryset}
+        context["STATIC_ROOT"] = settings.STATIC_ROOT
+
+        template_path = "cart_list_pdf.html"
+        template = get_template(template_path)
+        html = template.render(context)
+
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="cart.pdf"'
+
+        pisa_status = pisa.CreatePDF(html, dest=response)
+        if pisa_status.err:
+            raise NotAcceptable("Не удается подготовить PDF с списком.")
+        return response
