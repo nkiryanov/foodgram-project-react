@@ -4,7 +4,7 @@ volumes:
   postgres_data:
 
 services:
-  postgres:
+  postgres-local:
     image: postgres:13.3
     restart: always
     volumes:

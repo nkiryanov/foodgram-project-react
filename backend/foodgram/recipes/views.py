@@ -32,7 +32,7 @@ class RecipeTagViewSet(ReadOnlyModelViewSet):
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
-    queryset = Ingredient.objects.all()
+    queryset = Ingredient.objects.prefetch_related("measurement_unit")
     serializer_class = IngredientSerializer
     pagination_class = None
     permission_classes = [IsAuthenticatedOrReadOnly]

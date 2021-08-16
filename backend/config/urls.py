@@ -2,10 +2,15 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from foodgram.core.views import error400, error404, error500
 
 DEBUG = settings.DEBUG
 MEDIA_URL = settings.MEDIA_URL
 MEDIA_ROOT = settings.MEDIA_ROOT
+
+handler400 = error400
+handler404 = error404
+handler500 = error500
 
 
 api_patterns = [

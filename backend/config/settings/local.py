@@ -1,14 +1,15 @@
+import os
+
 from .base import *  # noqa
 
-# import os
-# env_file = os.path.join(ROOT_DIR, ".env")
-# environ.Env.read_env(env_file)
+env_file = os.path.join(ROOT_DIR, ".env")
+environ.Env.read_env(env_file)
 
 
 # GENERAL
 # ------------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/dev/ref/settings/#debug
-DEBUG = True
+DEBUG = env("DEBUG", default=True)
 
 
 # https://docs.djangoproject.com/en/dev/ref/settings/#secret-key
