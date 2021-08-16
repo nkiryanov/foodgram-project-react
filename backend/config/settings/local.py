@@ -50,20 +50,13 @@ EMAIL_BACKEND = env(
 # Your stuff...
 # ------------------------------------------------------------------------------
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": env("POSTGRES_DB", default="foodgram"),
-#         "USER": env("POSTGRES_USER", default="foodgram"),
-#         "PASSWORD": env("POSTGRES_PASSWORD", default="pg_password"),
-#         "HOST": env("POSTGRES_HOST", default="localhost"),
-#         "PORT": env("POSTGRES_PORT", default="5432"),
-#     }
-# }
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ROOT_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": env("POSTGRES_DB", default="foodgram"),
+        "USER": env("POSTGRES_USER", default="foodgram"),
+        "PASSWORD": env("POSTGRES_PASSWORD", default="pg_password"),
+        "HOST": env("POSTGRES_HOST", default="localhost"),
+        "PORT": env("POSTGRES_PORT", default="5432"),
     }
 }

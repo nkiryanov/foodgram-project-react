@@ -41,9 +41,10 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = (
-        Recipe.ext_objects.prefetch_related("ingredients")
-        .prefetch_related("author")
+        Recipe.ext_objects.prefetch_related("author")
         .prefetch_related("tags")
+        .prefetch_related("recipeingredients__ingredient")
+        .prefetch_related("recipeingredients__ingredient__measurement_unit")
     )
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthor | ReadOnly]
     filterset_class = RecipeFilter
