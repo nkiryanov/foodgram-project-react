@@ -177,7 +177,7 @@ class UsersViewTests(APITestCase):
         self.assertEqual(
             response.status_code,
             status.HTTP_406_NOT_ACCEPTABLE,
-            msg="Попытка подписать на себя должна вернуть код 406.",
+            msg="Попытка подписаться на себя должна вернуть код 406.",
         )
 
         is_follower_follows_following = UserSubscription.objects.filter(
