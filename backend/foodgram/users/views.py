@@ -16,7 +16,9 @@ User = get_user_model()
 
 
 class CustomUserViewSet(UserViewSet):
-    queryset = User.ext_objects.with_recipes_count()
+    queryset = User.ext_objects.with_recipes_count().prefetch_related(
+        "following"
+    )
 
     @action(
         detail=True,
