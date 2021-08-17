@@ -1,13 +1,14 @@
 name: production backend build and deploy
 
-defaults:
-  run:
-    working-directory: backend
-
 on:
   push:
     branches:
       - master
+
+defaults:
+  run:
+    working-directory: backend
+
 jobs:
   tests_and_coverage:
     name: Check codestyle, run test and upload Coverage Report
