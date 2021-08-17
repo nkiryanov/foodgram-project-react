@@ -47,6 +47,8 @@ services:
     environment:
       - TZ=Europe/Moscow
       - VALIDATION=http
+      - CERTPROVIDER=zerossl
+      - EMAIL=nikolay@kiryanov.ru
     env_file:
       - ./.envs/.swag
     volumes:
