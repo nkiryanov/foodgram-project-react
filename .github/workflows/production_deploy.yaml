@@ -48,8 +48,10 @@ jobs:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
     needs: tests_and_coverage
-    environment: staging_environment
     steps:
+      -
+        name: Check out the repo
+        uses: actions/checkout@v2
       -
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
@@ -63,6 +65,37 @@ jobs:
         name: Push to Docker Hub
         uses: docker/build-push-action@v2
         with:
-          file: Dockerfile
           push: true
+          context: backend
           tags: ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push_to_docker_hub
+    environment: production_environment
+    steps:
+      -
+        name: executing remote ssh commands to deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd ${{ github.event.repository.name }}
+            git pull
+
+            mkdir -p .envs/
+            touch .envs/.swag
+            echo PUID=$(id -u) > .envs/.swag
+            echo PGID=$(id -g) >> .envs/.swag
+            echo URL=${{ secrets.SITE_URL }} >> .envs/.swag
+            echo CERTPROVIDER=zerossl >> .envs/.swag
+            echo EMAIL=${{ secrets.SSL_EMAIL }} >> .envs/.swag
+
+            docker pull ${{ secrets.DOCKER_USERNAME }}/bbbs-backend:latest
+            docker-compose down
+            docker-compose up -d
+            docker-compose exec -d django python manage.py makemigrations --noinput
+            docker-compose exec -d django python manage.py migrate --noinput
+            docker-compose exec -d django python manage.py collectstatic --noinput

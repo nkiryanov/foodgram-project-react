@@ -1,0 +1,7 @@
+# PostgreSQL
+# ---------------------------------------------------------------------
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+POSTGRES_DB=foodgram
+POSTGRES_USER={{ задайте имя пользователя или используйте 'make gen-secretkey' для генерации ключа}}
+POSTGRES_PASSWORD={{ используйте 'make gen-secretkey' для генерации ключа }}
