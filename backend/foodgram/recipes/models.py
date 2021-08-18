@@ -15,6 +15,7 @@ class MeasurementUnit(models.Model):
         max_length=50,
         unique=True,
         verbose_name="Единица измерения",
+        db_index=True,
     )
 
     class Meta:
@@ -43,6 +44,7 @@ class Ingredient(models.Model):
         max_length=200,
         unique=True,
         verbose_name="Название",
+        db_index=True,
     )
     measurement_unit = models.ForeignKey(
         MeasurementUnit,
@@ -71,11 +73,13 @@ class RecipeTag(models.Model):
         max_length=30,
         unique=True,
         verbose_name="Тэг рецепта",
+        db_index=True,
     )
     slug = models.SlugField(
         max_length=40,
         unique=True,
         verbose_name="Slug тега рецепта",
+        db_index=True,
     )
 
     def save(self, *args, **kwargs):
@@ -122,6 +126,7 @@ class Recipe(models.Model):
     name = models.CharField(
         max_length=200,
         verbose_name="Название рецепта",
+        db_index=True,
     )
     image = models.ImageField(
         upload_to="recipes/images/",
@@ -196,6 +201,12 @@ class RecipeIngredient(models.Model):
         return f"{self.ingredient} в {self.recipe}"
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("recipe", "ingredient"),
+                name="Unique ingredient per recipe",
+            ),
+        ]
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
 

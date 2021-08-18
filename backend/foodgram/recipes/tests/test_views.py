@@ -206,46 +206,43 @@ class RecipeViewTests(APITestCase):
 
 @override_settings(MEDIA_ROOT=TEMP_DIR)
 class RecipeCreateViewTests(APITestCase):
-    @classmethod
-    def setUpTestData(cls) -> None:
-        super().setUpTestData()
-
+    def setUp(self) -> None:
         MeasurementUnitFactory.create_batch(5)
 
-        cls.ingredient_1 = IngredientFactory()
-        cls.ingredient_2 = IngredientFactory()
-        cls.tag1 = RecipeTagFactory()
-        cls.tag2 = RecipeTagFactory()
+        self.ingredient_1 = IngredientFactory()
+        self.ingredient_2 = IngredientFactory()
+        self.tag1 = RecipeTagFactory()
+        self.tag2 = RecipeTagFactory()
 
-        cls.user = UserFactory()
-        cls.name = "Простой рецепт"
-        cls.text = "Описание рецепта длинное."
+        self.user = UserFactory()
+        self.name = "Простой рецепт"
+        self.text = "Описание рецепта длинное."
 
-        cls.recipeingredient_1 = {"id": cls.ingredient_1.id, "amount": 10}
-        cls.recipeingredient_2 = {"id": cls.ingredient_2.id, "amount": 10}
+        self.recipeingredient_1 = {"id": self.ingredient_1.id, "amount": 10}
+        self.recipeingredient_2 = {"id": self.ingredient_2.id, "amount": 10}
 
-        cls.data = {
+        self.data = {
             "ingredients": [
-                cls.recipeingredient_1,
-                cls.recipeingredient_2,
+                self.recipeingredient_1,
+                self.recipeingredient_2,
             ],
-            "tags": [cls.tag1.id],
+            "tags": [self.tag1.id],
             "image": SMALL_GIF,
             "name": "Простой рецепт",
             "text": "Описание рецепта длинное.",
             "cooking_time": "20",
         }
 
-        cls.unauthorized_client = APIClient()
-        cls.authorized_client = APIClient()
-        cls.authorized_client.force_authenticate(user=cls.user)
+        self.unauthorized_client = APIClient()
+        self.authorized_client = APIClient()
+        self.authorized_client.force_authenticate(user=self.user)
 
     def test_create_recipe(self):
         """
         Posts a recipe and checks response.status_code and recipes count in DB.
         """
-        data = RecipeCreateViewTests.data
-        client = RecipeCreateViewTests.authorized_client
+        data = self.data
+        client = self.authorized_client
         recipes_count_before_post = Recipe.objects.count()
 
         response = client.post(URL_RECIPES_LIST, data=data, format="json")
@@ -269,10 +266,10 @@ class RecipeCreateViewTests(APITestCase):
     def test_recipe_without_tags_coudldn_be_created(self):
         """Posts recipe without tags. We should returns errors."""
 
-        data = RecipeCreateViewTests.data
+        data = self.data
         data.pop("tags")
         recipes_count_before_post = Recipe.objects.count()
-        client = RecipeCreateViewTests.authorized_client
+        client = self.authorized_client
 
         response = client.post(URL_RECIPES_LIST, data=data, format="json")
 
@@ -295,10 +292,10 @@ class RecipeCreateViewTests(APITestCase):
     def test_recipe_without_ingredients_couldnt_be_created(self):
         """Posts recipe without ingredeints data. We should returns errors."""
 
-        data = RecipeCreateViewTests.data
+        data = self.data
         data.pop("ingredients")
         recipes_count_before_post = Recipe.objects.count()
-        client = RecipeCreateViewTests.authorized_client
+        client = self.authorized_client
 
         response = client.post(URL_RECIPES_LIST, data=data, format="json")
 
@@ -323,12 +320,12 @@ class RecipeCreateViewTests(APITestCase):
         1. Posts recipe with same name. We should return error.
         2. Posts recipe with different name and it should be ok.
         """
-        author = RecipeCreateViewTests.user
-        data = RecipeCreateViewTests.data
+        author = self.user
+        data = self.data
         name = data["name"]
         RecipeFactory(author=author, name=name)
         recipes_count_before_post = Recipe.objects.count()
-        client = RecipeCreateViewTests.authorized_client
+        client = self.authorized_client
 
         response = client.post(URL_RECIPES_LIST, data=data, format="json")
 
@@ -360,21 +357,83 @@ class RecipeCreateViewTests(APITestCase):
             msg="Рецептов должно стать на 1 больше.",
         )
 
+    def test_recipe_with_duplicated_ingredients_couldnt_be_created(self):
+        """
+        Posts a recipe and duplicated ingredient (but with different amount).
+        The recipe should not be created.
+        """
+        duplicate = {
+            "id": self.ingredient_1.id,
+            "amount": 20,
+        }
+        data = self.data
+        data["ingredients"] = [
+            self.recipeingredient_1,
+            duplicate,
+        ]
+        client = self.authorized_client
+        recipes_count_before_post = Recipe.objects.count()
+
+        response = client.post(URL_RECIPES_LIST, data=data, format="json")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            msg=(
+                f"Убедитесь, что не удается создать рецепт с дубликатами "
+                f"ингредиентов. Ответ который получили {response.data}"
+            ),
+        )
+
+        recipes_count_after_post = Recipe.objects.count()
+        self.assertEqual(
+            recipes_count_after_post,
+            recipes_count_before_post,
+            msg="Количество рецептов не должно измениться.",
+        )
+
+    def test_recipe_with_duplicated_tags_couldnt_be_created(self):
+        """
+        Posts a recipe and duplicated tags. The recipe should not be created.
+        """
+        data = self.data
+        data["tags"] = [self.tag1.id, self.tag1.id]
+        client = self.authorized_client
+        recipes_count_before_post = Recipe.objects.count()
+
+        response = client.post(URL_RECIPES_LIST, data=data, format="json")
+
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_400_BAD_REQUEST,
+            msg=(
+                f"Убедитесь, что не удается создать рецепт с дубликатами "
+                f"тэгов. Ответ который получили {response.data}"
+            ),
+        )
+
+        recipes_count_after_post = Recipe.objects.count()
+        self.assertEqual(
+            recipes_count_after_post,
+            recipes_count_before_post,
+            msg="Количество рецептов не должно измениться.",
+        )
+
     def test_recipe_patch(self):
         """Patchs existed recipe with same new name."""
-        author = RecipeCreateViewTests.user
+        author = self.user
         recipe = RecipeFactory(author=author, name="Старое имя")
         updated_data = {
             "ingredients": [
-                RecipeCreateViewTests.recipeingredient_1,
+                self.recipeingredient_1,
             ],
-            "tags": [RecipeCreateViewTests.tag2.id],
+            "tags": [self.tag2.id],
             "image": SMALL_GIF,
             "name": "Новое имя",
             "text": "НОВОЕ Описание рецепта длинное.",
             "cooking_time": "10",
         }
-        client = RecipeCreateViewTests.authorized_client
+        client = self.authorized_client
 
         url_recipe_patch = reverse("recipes-detail", args=[recipe.id])
 
@@ -398,14 +457,14 @@ class RecipeCreateViewTests(APITestCase):
 
     def test_recipe_not_author_cant_patch_recipe(self):
         """Patchs existed recipe with same new name."""
-        author = RecipeCreateViewTests.user
+        author = self.user
         other_user = UserFactory()
         recipe = RecipeFactory(author=author, name="Старое имя")
         updated_data = {
             "ingredients": [
-                RecipeCreateViewTests.recipeingredient_1,
+                self.recipeingredient_1,
             ],
-            "tags": [RecipeCreateViewTests.tag2.id],
+            "tags": [self.tag2.id],
             "image": SMALL_GIF,
             "name": "Новое имя",
             "text": "НОВОЕ Описание рецепта длинное.",
