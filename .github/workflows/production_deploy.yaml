@@ -84,8 +84,9 @@ jobs:
           script: |
             cd ${{ github.event.repository.name }}
             git pull
+            cd infra/production/
 
-            mkdir -p .envs/
+            mkdir -p ./envs/
             touch .envs/.swag
             echo PUID=$(id -u) > .envs/.swag
             echo PGID=$(id -g) >> .envs/.swag
