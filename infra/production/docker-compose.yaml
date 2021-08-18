@@ -38,8 +38,8 @@ services:
     volumes:
       - static_value:/config/backend/static/
       - media_value:/config/backend/media/
-      - .../docs/:/config/backend/api/docs/
-      - .../frontend/build/:/config/www/
+      - ../../docs/:/config/backend/api/docs/
+      - ../../frontend/build/:/config/www/
       - ./swag_nginx.conf:/config/nginx/site-confs/default
     ports:
       - 443:443
