@@ -1,9 +1,9 @@
-import os
+import os  # noqa
 
 from .base import *  # noqa
 
-env_file = os.path.join(ROOT_DIR, ".env")
-environ.Env.read_env(env_file)
+# env_file = os.path.join(ROOT_DIR, ".env") # noqa
+# environ.Env.read_env(env_file) # noqa
 
 
 # GENERAL

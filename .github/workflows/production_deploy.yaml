@@ -84,7 +84,7 @@ jobs:
           script: |
             cd ${{ github.event.repository.name }}
             git pull
-            cd infra/production/
+            cd ./infra/production/
 
             mkdir -p ./envs/
             touch .envs/.swag
