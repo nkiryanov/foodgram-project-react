@@ -15,7 +15,6 @@ services:
       - ./.envs/.postgres
   django:
     image: klyaxa/foodgram-backend:latest
-    build: ./backend/
     restart: always
     volumes:
       - static_value:/code/staticfiles/
@@ -33,14 +32,15 @@ services:
     environment:
       - TZ=Europe/Moscow
       - VALIDATION=http
+      - CERTPROVIDER=zerossl
     env_file:
       - ./.envs/.swag
     volumes:
       - static_value:/config/backend/static/
       - media_value:/config/backend/media/
-      - ./docs/:/config/backend/api/docs/
-      - ./frontend/build/:/config/www/
-      - ./infra/swag_nginx.conf:/config/nginx/site-confs/default
+      - .../docs/:/config/backend/api/docs/
+      - .../frontend/build/:/config/www/
+      - ./swag_nginx.conf:/config/nginx/site-confs/default
     ports:
       - 443:443
       - 80:80
