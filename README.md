@@ -171,6 +171,12 @@ Swag
     python manage.py fill_recipes 120 --realimages
     ```
 
+Для генерации тестовых данных используется **factory_boy**. Если это production сервере, то этого пакета нет в зависимостях, нужно установить:
+```shell
+docker-compose exec django bash
+pip install factory_boy
+```
+
 ## Запуск тестов
 Тесты используют unittest, но удобно запускать и менеджерить через pytest
 
