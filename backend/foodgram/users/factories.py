@@ -1,11 +1,9 @@
 import factory
 from django.contrib.auth import get_user_model
-from faker import Faker
 
 from .models import UserSubscription
 
 User = get_user_model()
-fake = Faker(["ru-RU"])
 
 
 class UserSubscriptionFactory(factory.django.DjangoModelFactory):
@@ -33,8 +31,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     username = factory.Sequence(lambda n: f"user_{User.objects.count()}")
     email = factory.LazyAttribute(lambda obj: f"{obj.username}@foodgram.ru")
     password = "Food2021"
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
+    first_name = factory.Faker("first_name", locale="ru_RU")
+    last_name = factory.Faker("last_name", locale="ru_RU")
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
