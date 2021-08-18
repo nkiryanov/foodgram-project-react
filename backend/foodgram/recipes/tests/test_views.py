@@ -267,7 +267,7 @@ class RecipeCreateViewTests(APITestCase):
         """Posts recipe without tags. We should returns errors."""
 
         data = self.data
-        data.pop("tags")
+        data["tags"] = []
         recipes_count_before_post = Recipe.objects.count()
         client = self.authorized_client
 
@@ -293,7 +293,7 @@ class RecipeCreateViewTests(APITestCase):
         """Posts recipe without ingredeints data. We should returns errors."""
 
         data = self.data
-        data.pop("ingredients")
+        data["ingredients"] = []
         recipes_count_before_post = Recipe.objects.count()
         client = self.authorized_client
 
