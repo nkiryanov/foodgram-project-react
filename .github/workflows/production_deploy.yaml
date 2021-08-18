@@ -93,7 +93,7 @@ jobs:
             echo CERTPROVIDER=zerossl >> .envs/.swag
             echo EMAIL=${{ secrets.SSL_EMAIL }} >> .envs/.swag
 
-            docker pull ${{ secrets.DOCKER_USERNAME }}/bbbs-backend:latest
+            docker pull ${{ secrets.DOCKER_USERNAME }}/foodgram-backend:latest
             docker-compose down
             docker-compose up -d
             docker-compose exec -d django python manage.py makemigrations --noinput
