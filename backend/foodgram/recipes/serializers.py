@@ -1,5 +1,6 @@
 from typing import Sequence
 
+from django.db import transaction
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
@@ -126,19 +127,40 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             ),
         ]
 
-    def validate_tags(self, value):
-        if len(value) == 0:
+    def validate_tags(self, tags):
+        if len(tags) == 0:
             raise serializers.ValidationError(
                 "Рецепт не может быть без тегов."
             )
-        return value
 
-    def validate_ingredients(self, value):
-        if len(value) == 0:
+        unique_tags = set(tags)
+        if len(unique_tags) != len(tags):
+            raise serializers.ValidationError(
+                "Массиов тегов должен быть уникальным."
+            )
+        return tags
+
+    def validate_ingredients(self, recipeingredients):
+        if len(recipeingredients) == 0:
             raise serializers.ValidationError(
                 "Рецепт не может быть без ингредиентов."
             )
-        return value
+
+        not_unique_ingredients = [
+            recipeingredient["ingredient"].id
+            for recipeingredient in recipeingredients
+        ]
+        unique_ingredients = set(not_unique_ingredients)
+
+        not_unique_ingredients_amount = len(not_unique_ingredients)
+        unique_ingredients_amount = len(unique_ingredients)
+
+        if unique_ingredients_amount != not_unique_ingredients_amount:
+            raise serializers.ValidationError(
+                "Каждый ингредиент в рецепте должен быть уникальным."
+            )
+
+        return recipeingredients
 
     def _save_related_objects(
         self,
@@ -165,6 +187,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
+    @transaction.atomic
     def create(self, validated_data):
         """
         Creates "Recipe" and sets tags and ingredients (recipeingredients) for
@@ -184,6 +207,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
         return recipe
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         """
         Assumes that the whole object provided. It doesn't support partial

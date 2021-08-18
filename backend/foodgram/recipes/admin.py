@@ -7,6 +7,7 @@ from foodgram.recipes.models import (
     RecipeCart,
     RecipeFavorite,
     RecipeIngredient,
+    RecipeTag,
 )
 
 
@@ -19,6 +20,10 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ["name", "measurement_unit"]
     search_fields = ["name"]
     list_filter = ["measurement_unit"]
+
+
+class RecipeTagAdmin(admin.ModelAdmin):
+    list_display = ["name", "color"]
 
 
 class RecipeIngredientInline(admin.TabularInline):
@@ -64,6 +69,7 @@ class RecipeCartAdmin(admin.ModelAdmin):
 
 admin.site.register(MeasurementUnit, MeasurementUnitAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
+admin.site.register(RecipeTag, RecipeTagAdmin)
 admin.site.register(Recipe, RecipeAdmin)
 admin.site.register(RecipeFavorite, RecipeFavoriteAdmin)
 admin.site.register(RecipeCart, RecipeCartAdmin)
