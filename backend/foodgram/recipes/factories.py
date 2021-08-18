@@ -1,7 +1,9 @@
 import random
+import urllib
 
 import factory
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 
 from ..core.utils import cyrillic_slugify
 from .models import (
@@ -67,10 +69,10 @@ class RecipeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Recipe
 
-    name = factory.Faker("sentence")
+    name = factory.Faker("sentence", locale="ru_RU")
     author = factory.Iterator(User.objects.all())
-    image = factory.django.ImageField(color=factory.Faker("color_name"))
-    text = factory.Faker("text", max_nb_chars=1000)
+    image = factory.django.ImageField(color=factory.Faker("color"))
+    text = factory.Faker("text", max_nb_chars=1000, locale="ru_RU")
     cooking_time = factory.Faker("random_int", max=50)
 
     @factory.post_generation
@@ -117,12 +119,28 @@ class RecipeFactory(factory.django.DjangoModelFactory):
         ingredients = Ingredient.objects.order_by("?")[:how_many]
         add_ingredients(self, ingredients)
 
+    @factory.post_generation
+    def add_real_image(self, created, extracted, **kwargs):
+        """
+        If 'true' download and replace picture with image form picsum.photos.
+        To use it set "add_real_image=True"
+        """
+        if not created:
+            return
+
+        if extracted is True:
+            image = urllib.request.urlopen(
+                "https://picsum.photos/800/800"
+            ).read()
+            self.image.save(self.name + ".jpg", ContentFile(image), save=False)
+
 
 class RecipeCartFactory(factory.django.DjangoModelFactory):
     """Relates on User on Recipe objects. Be sure there are enough in DB."""
 
     class Meta:
         model = RecipeCart
+        django_get_or_create = ["user", "recipe"]
 
     user = factory.Iterator(User.objects.all())
     recipe = factory.Iterator(Recipe.objects.all())
@@ -133,6 +151,7 @@ class RecipeFavoriteFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = RecipeFavorite
+        django_get_or_create = ["user", "recipe"]
 
     user = factory.Iterator(User.objects.all())
     recipe = factory.Iterator(Recipe.objects.all())
