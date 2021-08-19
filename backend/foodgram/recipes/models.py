@@ -4,6 +4,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
+from django.db.models.query import Prefetch
 
 from ..core.utils import cyrillic_slugify
 
@@ -113,6 +114,16 @@ class RecipeQuerySet(models.QuerySet):
             recipe=OuterRef("id"),
         )
         qs = self.annotate(is_in_shopping_cart=Exists(subquery))
+        return qs
+
+    def author_with_subscriptions(self, user=None):
+        """Annotated related authors object with 'is_subsribed' attribute."""
+        qs_with_subscriptions = User.ext_objects.with_subscriptions(user=user)
+        prefetch = Prefetch(
+            "author",
+            queryset=qs_with_subscriptions,
+        )
+        qs = self.prefetch_related(prefetch)
         return qs
 
 
