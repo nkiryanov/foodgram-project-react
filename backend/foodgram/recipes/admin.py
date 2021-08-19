@@ -20,6 +20,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_display = ["name", "measurement_unit"]
     search_fields = ["name"]
     list_filter = ["measurement_unit"]
+    list_select_related = True
 
 
 class RecipeTagAdmin(admin.ModelAdmin):
@@ -45,12 +46,7 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         qs = super().get_queryset(request)
-        qs = (
-            qs.annotate(favorite_count=Count("favorites"))
-            .prefetch_related("favorites")
-            .prefetch_related("tags")
-            .prefetch_related("ingredients")
-        )
+        qs = qs.annotate(favorite_count=Count("favorites"))
         return qs
 
     autocomplete_fields = ["ingredients"]
