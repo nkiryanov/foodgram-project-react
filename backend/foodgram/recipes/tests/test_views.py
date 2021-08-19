@@ -203,6 +203,74 @@ class RecipeViewTests(APITestCase):
             msg="Пустой список покупок должен возвращать 404.",
         )
 
+    def test_recipes_has_right_fields(self):
+        """Result has all expected fields.
+
+        Be aware that nested objects fields will be tested in its own test.
+        They are:
+            - tags
+            - author
+            - ingredients
+        """
+
+        fields = [
+            "id",
+            "tags",
+            "author",
+            "ingredients",
+            "is_favorited",
+            "is_in_shopping_cart",
+            "name",
+            "image",
+            "text",
+            "cooking_time",
+        ]
+        client = RecipeViewTests.authorized_client
+
+        response = client.get(path=URL_RECIPES_LIST).data
+        result = response.get("results")[0]
+        for field in fields:
+            with self.subTest(field=field):
+                self.assertTrue(field in result, msg=f"Нет поля {field}")
+
+    def test_recipe_author_has_right_fields(self):
+        """Nested author has to have all expected fields."""
+
+        fields = [
+            "email",
+            "id",
+            "username",
+            "first_name",
+            "last_name",
+            "is_subscribed",
+        ]
+        client = RecipeViewTests.authorized_client
+
+        response = client.get(path=URL_RECIPES_LIST).data
+        result = response.get("results")[0]
+        author = result.get("author")
+        for field in fields:
+            with self.subTest(field=field):
+                self.assertTrue(field in author, msg=f"Нет поля {field}")
+
+    def test_recipe_ingredient_has_right_fields(self):
+        """Nested ingredient has to have all expected fields."""
+
+        fields = [
+            "id",
+            "name",
+            "measurement_unit",
+            "amount",
+        ]
+        client = RecipeViewTests.authorized_client
+
+        response = client.get(path=URL_RECIPES_LIST).data
+        result = response.get("results")[0]
+        ingredient = result.get("ingredients")[0]
+        for field in fields:
+            with self.subTest(field=field):
+                self.assertTrue(field in ingredient, msg=f"Нет поля {field}")
+
 
 @override_settings(MEDIA_ROOT=TEMP_DIR)
 class RecipeCreateViewTests(APITestCase):
