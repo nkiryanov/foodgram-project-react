@@ -5,7 +5,7 @@ from rest_framework import serializers
 class UserSerializer(djoser_serializers.UserSerializer):
     """Uses djoser's UserSerializer with extra fields."""
 
-    is_subscribed = serializers.SerializerMethodField(read_only=True)
+    is_subscribed = serializers.BooleanField(read_only=True)
 
     class Meta(djoser_serializers.UserSerializer.Meta):
         fields = djoser_serializers.UserSerializer.Meta.fields + (
@@ -13,13 +13,6 @@ class UserSerializer(djoser_serializers.UserSerializer):
             "last_name",
             "is_subscribed",
         )
-
-    def get_is_subscribed(self, obj):
-        user = self.context["request"].user
-        is_subscribed = False
-        if user.is_authenticated:
-            is_subscribed = user.following.filter(following=obj).exists()
-        return is_subscribed
 
 
 class UserCreateSerializer(djoser_serializers.UserCreateSerializer):

@@ -41,8 +41,7 @@ class IngredientViewSet(ReadOnlyModelViewSet):
 
 class RecipeViewSet(ModelViewSet):
     queryset = (
-        Recipe.ext_objects.prefetch_related("author")
-        .prefetch_related("tags")
+        Recipe.ext_objects.prefetch_related("tags")
         .prefetch_related("recipeingredients__ingredient")
         .prefetch_related("recipeingredients__ingredient__measurement_unit")
     )
@@ -55,8 +54,10 @@ class RecipeViewSet(ModelViewSet):
             user = None
 
         queryset = super().get_queryset()
-        queryset = queryset.with_favorites(user=user).with_shopping_cart(
-            user=user
+        queryset = (
+            queryset.author_with_subscriptions(user=user)
+            .with_favorites(user=user)
+            .with_shopping_cart(user=user)
         )
         return queryset
 
