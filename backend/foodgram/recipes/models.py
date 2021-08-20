@@ -107,6 +107,7 @@ class RecipeTag(models.Model):
 
 class RecipeQuerySet(models.QuerySet):
     def with_favorites(self, user=None):
+        """Annotates recipes  with 'is_favorited' field."""
         subquery = RecipeFavorite.objects.filter(
             user=user,
             recipe=OuterRef("id"),
@@ -115,6 +116,7 @@ class RecipeQuerySet(models.QuerySet):
         return qs
 
     def with_shopping_cart(self, user=None):
+        """Annotates recipes  with 'is_in_shopping_cart' field."""
         subquery = RecipeCart.objects.filter(
             user=user,
             recipe=OuterRef("id"),

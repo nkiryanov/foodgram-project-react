@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import MethodNotAllowed, NotAcceptable, NotFound
+from rest_framework.exceptions import NotAcceptable, NotFound
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
@@ -69,9 +69,19 @@ class RecipeViewSet(ModelViewSet):
     def _recipe_action_template(self, request, pk=None, related_model=None):
         """Template for similar ViewSet actions."""
 
+        allowed_methods = [
+            "GET",
+            "DELETE",
+        ]
+
         assert (
             related_model is not None
         ), "'related_model' (связанная модель) обязательный параметр."
+
+        assert request.method in allowed_methods, (
+            f"В request не допустимый метод. Поддерживаемые методы "
+            f"{allowed_methods}"
+        )
 
         recipe = self.get_object()
         is_related_obj_exists = related_model.objects.filter(
@@ -97,8 +107,6 @@ class RecipeViewSet(ModelViewSet):
                 recipe=recipe,
             ).delete()
             return Response(status=status.HTTP_201_CREATED)
-
-        raise MethodNotAllowed()
 
     @action(
         methods=["get", "delete"],

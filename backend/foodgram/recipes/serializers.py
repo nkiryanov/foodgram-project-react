@@ -81,6 +81,14 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """
+    Simple recipes serializer but requires annotated queryset with
+        - "is_favorited" field
+        - "is_in_shopping_cart" filed
+        - pass author to UserSerializer that requires:
+            - "is_subscribed" field
+    """
+
     tags = RecipeTagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         source="recipeingredients",
@@ -96,6 +104,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating recipes."""
+
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     tags = serializers.SlugRelatedField(
         slug_field="id",

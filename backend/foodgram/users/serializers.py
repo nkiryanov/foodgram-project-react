@@ -3,7 +3,10 @@ from rest_framework import serializers
 
 
 class UserSerializer(djoser_serializers.UserSerializer):
-    """Uses djoser's UserSerializer with extra fields."""
+    """
+    Uses djoser's UserSerializer with extra fields.
+    Users queryset have to be annotated with "is_subscribed" field.
+    """
 
     is_subscribed = serializers.BooleanField(read_only=True)
 
@@ -26,6 +29,13 @@ class UserCreateSerializer(djoser_serializers.UserCreateSerializer):
 
 
 class UserSubscriptionSerializer(UserSerializer):
+    """Returns users list with their recipes.
+
+    User queryset have to be annotated with:
+        - is_subscribed
+        - recipes_count
+    """
+
     from foodgram.recipes.serializers import BaseRecipeSerializer
 
     recipes = BaseRecipeSerializer(many=True)
