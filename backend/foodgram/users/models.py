@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-from django.db.models import Count, Exists, OuterRef, Prefetch, Subquery
+from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, Subquery
 from django.utils.translation import gettext_lazy as _
 
 
@@ -65,6 +65,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ["id"]
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
 
 class UserSubscription(models.Model):
@@ -86,7 +88,11 @@ class UserSubscription(models.Model):
             models.UniqueConstraint(
                 fields=["follower", "following"],
                 name="Unique subscription per follower and author (following)",
-            )
+            ),
+            models.CheckConstraint(
+                name="Unique subscription - prevent user follow himself",
+                check=~Q(follower=F("following")),
+            ),
         ]
         verbose_name = "Подписка на пользователя"
         verbose_name_plural = "Подписки на пользователя"
@@ -94,5 +100,5 @@ class UserSubscription(models.Model):
     def __str__(self):
         return (
             f"Подписка '{self.follower.username}' на пользователя "
-            f"{self.following.username}"
+            f"'{self.following.username}'"
         )
