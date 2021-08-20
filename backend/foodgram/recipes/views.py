@@ -69,9 +69,19 @@ class RecipeViewSet(ModelViewSet):
     def _recipe_action_template(self, request, pk=None, related_model=None):
         """Template for similar ViewSet actions."""
 
+        allowed_methods = [
+            "GET",
+            "DELETE",
+        ]
+
         assert (
             related_model is not None
         ), "'related_model' (связанная модель) обязательный параметр."
+
+        assert request.method in allowed_methods, (
+            f"В request не допустимый метод. Поддерживаемые методы "
+            f"{allowed_methods}"
+        )
 
         recipe = self.get_object()
         is_related_obj_exists = related_model.objects.filter(

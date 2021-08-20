@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
 from django.db.models.query import Prefetch
 
+from ..core.constants import MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT
 from ..core.utils import cyrillic_slugify
 
 User = get_user_model()
@@ -21,7 +22,8 @@ class MeasurementUnit(models.Model):
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "Единицы измерения"
+        verbose_name = "Единица измерения"
+        verbose_name_plural = "Единицы измерения"
 
     def __str__(self):
         return f"{self.name}"
@@ -29,6 +31,10 @@ class MeasurementUnit(models.Model):
 
 class IngredientQuerySet(models.QuerySet):
     def user_cart(self, user=None):
+        """
+        If 'user' provided returns list of distinct ingredients from
+        user's recipes in shopping cart.
+        """
         assert user is not None, "'user' is required attribute."
 
         qs = (
@@ -83,13 +89,13 @@ class RecipeTag(models.Model):
         db_index=True,
     )
 
+    def __str__(self):
+        return f"{self.name}"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = cyrillic_slugify(self.name)
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name}"
 
     class Meta:
         ordering = [
@@ -101,6 +107,7 @@ class RecipeTag(models.Model):
 
 class RecipeQuerySet(models.QuerySet):
     def with_favorites(self, user=None):
+        """Annotates recipes  with 'is_favorited' field."""
         subquery = RecipeFavorite.objects.filter(
             user=user,
             recipe=OuterRef("id"),
@@ -109,6 +116,7 @@ class RecipeQuerySet(models.QuerySet):
         return qs
 
     def with_shopping_cart(self, user=None):
+        """Annotates recipes  with 'is_in_shopping_cart' field."""
         subquery = RecipeCart.objects.filter(
             user=user,
             recipe=OuterRef("id"),
@@ -156,7 +164,7 @@ class Recipe(models.Model):
         verbose_name="Время приготовления (в минутах)",
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(4320),
+            MaxValueValidator(MAX_COOKING_TIME),
         ],
     )
     tags = models.ManyToManyField(
@@ -173,9 +181,6 @@ class Recipe(models.Model):
     objects = models.Manager()
     ext_objects = RecipeQuerySet.as_manager()
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ["-pub_date"]
         constraints = [
@@ -185,6 +190,9 @@ class Recipe(models.Model):
         ]
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeIngredient(models.Model):
@@ -203,13 +211,10 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name="Количество",
         validators=[
-            MinValueValidator(0),
-            MaxValueValidator(200),
+            MinValueValidator(1),
+            MaxValueValidator(MAX_INGREDIENT_AMOUNT),
         ],
     )
-
-    def __str__(self):
-        return f"{self.ingredient} в {self.recipe}"
 
     class Meta:
         constraints = [
@@ -220,6 +225,9 @@ class RecipeIngredient(models.Model):
         ]
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
+
+    def __str__(self):
+        return f"{self.ingredient} в {self.recipe}"
 
 
 class RecipeFavorite(models.Model):
@@ -264,12 +272,6 @@ class RecipeCart(models.Model):
         verbose_name="Рецепт",
     )
 
-    def __str__(self):
-        return (
-            f"Рецепт '{self.recipe.name}' из корзины покупок "
-            f"у {self.user.username}"
-        )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -279,3 +281,9 @@ class RecipeCart(models.Model):
         ]
         verbose_name = "Объект корзины покупок"
         verbose_name_plural = "Объекты корзины покупок"
+
+    def __str__(self):
+        return (
+            f"Рецепт '{self.recipe.name}' из корзины покупок "
+            f"у '{self.user.username}'"
+        )

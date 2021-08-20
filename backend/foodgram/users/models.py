@@ -1,12 +1,17 @@
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
-from django.db.models import Count, Exists, OuterRef, Prefetch, Subquery
+from django.db.models import Count, Exists, F, OuterRef, Prefetch, Q, Subquery
 from django.utils.translation import gettext_lazy as _
 
 
 class UserQuerySet(models.QuerySet):
     def with_subscriptions(self, user=None):
+        """
+        If user object provided annotates queryset with "is_subscribed" field.
+        If user wasn't provided it still annotests with the field but it
+        allways "False".
+        """
         subquery = UserSubscription.objects.filter(
             follower=user,
             following_id=OuterRef("id"),
@@ -15,6 +20,7 @@ class UserQuerySet(models.QuerySet):
         return qs
 
     def with_recipes_count(self):
+        """Annotates queryset with amount of user's recipes."""
         qs = self.annotate(recipes_count=Count("recipes"))
         return qs
 
@@ -59,6 +65,8 @@ class User(AbstractUser):
 
     class Meta:
         ordering = ["id"]
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
 
 
 class UserSubscription(models.Model):
@@ -75,18 +83,22 @@ class UserSubscription(models.Model):
         verbose_name="На кого подписался",
     )
 
-    def __str__(self):
-        return (
-            f"Подписка '{self.follower.username}' на пользователя "
-            f"{self.following.username}"
-        )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
                 fields=["follower", "following"],
                 name="Unique subscription per follower and author (following)",
-            )
+            ),
+            models.CheckConstraint(
+                name="Unique subscription - prevent user follow himself",
+                check=~Q(follower=F("following")),
+            ),
         ]
         verbose_name = "Подписка на пользователя"
         verbose_name_plural = "Подписки на пользователя"
+
+    def __str__(self):
+        return (
+            f"Подписка '{self.follower.username}' на пользователя "
+            f"'{self.following.username}'"
+        )

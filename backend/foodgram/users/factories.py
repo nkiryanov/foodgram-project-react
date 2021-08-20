@@ -7,12 +7,27 @@ User = get_user_model()
 
 
 class UserSubscriptionFactory(factory.django.DjangoModelFactory):
+    """
+    Picks rundom user object and set it as follower.
+    After that picks other random user object (except self) and set it as
+    following.
+    """
+
     class Meta:
         model = UserSubscription
         django_get_or_create = ["follower", "following"]
 
-    follower = factory.Iterator(User.objects.all())
-    following = factory.Iterator(User.objects.all())
+    @factory.lazy_attribute
+    def follower(self):
+        return User.objects.order_by("?").first()
+
+    @factory.lazy_attribute
+    def following(self):
+
+        following = (
+            User.objects.exclude(id=self.follower.id).order_by("?").first()
+        )
+        return following
 
 
 class UserFactory(factory.django.DjangoModelFactory):

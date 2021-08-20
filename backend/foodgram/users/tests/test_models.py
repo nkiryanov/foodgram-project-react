@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.db import IntegrityError
 from django.test import TestCase
-from foodgram.users.factories import UserFactory
+
+from ..factories import UserFactory
+from ..models import UserSubscription
 
 User = get_user_model()
 
@@ -10,7 +13,7 @@ class UserModelTest(TestCase):
     @classmethod
     def setUpTestData(cls) -> None:
         super().setUpTestData()
-        UserFactory(email="user1@email.ru")
+        cls.user = UserFactory(email="user1@email.ru")
 
     def test_email_is_required_field(self):
         user_without_email = User(username="user1", password="Qwe1232343")
@@ -36,3 +39,10 @@ class UserModelTest(TestCase):
             ),
         ):
             user_with_existed_email.full_clean()
+
+    def test_user_no_self_follow(self):
+        """User should can not follow himsels."""
+        user = UserModelTest.user
+        constraint_name = "Unique subscription - prevent user follow himself"
+        with self.assertRaisesMessage(IntegrityError, constraint_name):
+            UserSubscription.objects.create(follower=user, following=user)
