@@ -81,6 +81,14 @@ class RecipeIngredientCreateSerializer(serializers.ModelSerializer):
 
 
 class RecipeSerializer(serializers.ModelSerializer):
+    """
+    Simple recipes serializer but requires annotated queryset with
+        - "is_favorited" field
+        - "is_in_shopping_cart" filed
+        - pass author to UserSerializer that requires:
+            - "is_subscribed" field
+    """
+
     tags = RecipeTagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         source="recipeingredients",
@@ -96,6 +104,8 @@ class RecipeSerializer(serializers.ModelSerializer):
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating recipes."""
+
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     tags = serializers.SlugRelatedField(
         slug_field="id",
@@ -128,7 +138,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         ]
 
     def validate_tags(self, tags):
-        if len(tags) == 0:
+        if not tags:
             raise serializers.ValidationError(
                 "Рецепт не может быть без тегов."
             )
@@ -141,7 +151,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         return tags
 
     def validate_ingredients(self, recipeingredients):
-        if len(recipeingredients) == 0:
+        if not recipeingredients:
             raise serializers.ValidationError(
                 "Рецепт не может быть без ингредиентов."
             )

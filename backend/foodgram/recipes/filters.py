@@ -1,17 +1,30 @@
-from django.db.models import Q
+from django.db.models import Case, Q, Value, When
 from django_filters import rest_framework as filters
 
 from .models import Recipe, RecipeTag
 
 
 class IngredientFilter(filters.FilterSet):
+    """
+    Filter ingredients with 'name' in it's name.
+    It also reorders the queryset. Ingredients that starts with 'name' are
+    listed first.
+    """
+
     name = filters.CharFilter(method="name_filter")
 
     def name_filter(self, queryset, name, value):
-        qs = queryset.filter(
-            Q(name__istartswith=value) | Q(name__icontains=value)
+        qs = queryset.filter(Q(name__icontains=value))
+        qs = qs.annotate(
+            name_startswith=Case(
+                When(
+                    Q(name__istartswith=value),
+                    then=Value(True),
+                ),
+                default=Value(False),
+            ),
         )
-        return qs
+        return qs.order_by("-name_startswith")
 
 
 class RecipeFilter(filters.FilterSet):

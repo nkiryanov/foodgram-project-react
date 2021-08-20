@@ -149,3 +149,48 @@ class RecipesFilterTests(APITestCase):
         self.assertEqual(
             count, 11, msg="Создали 11 рецептов. Все они должны быть в ответе."
         )
+
+
+class IngredientsFilterTests(APITestCase):
+    @classmethod
+    def setUpTestData(cls) -> None:
+        super().setUpTestData()
+
+        MeasurementUnitFactory.create_batch(5)
+        IngredientFactory(name="анаша")
+        IngredientFactory(name="панаша")
+        IngredientFactory(name="горох")
+
+        cls.unauthorized_client = APIClient()
+
+    def test_ingredients_name_filter_returns_filtered_objects(self):
+        """
+        Ingredient filterset should not return ingredients that don't match
+        filtered criteria.
+        """
+        client = IngredientsFilterTests.unauthorized_client
+        query_params = {"name": "ана"}
+
+        response_data = client.get(URL_INGREDIENTS_LIST, query_params).data
+        filtered_ingredients_count = len(response_data)
+        self.assertEqual(
+            filtered_ingredients_count,
+            2,
+            msg="Убедитесь, что фильтр по ингредиентам работает.",
+        )
+
+    def test_ingredients_name_filter_ordering(self):
+        """
+        Ingredient filterset should order ingredients that start with
+        provided value first.
+        """
+        client = IngredientsFilterTests.unauthorized_client
+        query_params = {"name": "ана"}
+
+        response_data = client.get(URL_INGREDIENTS_LIST, query_params).data
+        first_ingredient = response_data[0]
+        self.assertEqual(
+            first_ingredient["name"],
+            "анаша",
+            msg="Убедитесь, что фильтр по ингредиентам работает.",
+        )
