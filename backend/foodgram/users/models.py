@@ -7,6 +7,11 @@ from django.utils.translation import gettext_lazy as _
 
 class UserQuerySet(models.QuerySet):
     def with_subscriptions(self, user=None):
+        """
+        If user object provided annotates queryset with "is_subscribed" field.
+        If user wasn't provided it still annotests with the field but it
+        allways "False".
+        """
         subquery = UserSubscription.objects.filter(
             follower=user,
             following_id=OuterRef("id"),
@@ -15,6 +20,7 @@ class UserQuerySet(models.QuerySet):
         return qs
 
     def with_recipes_count(self):
+        """Annotates queryset with amount of user's recipes."""
         qs = self.annotate(recipes_count=Count("recipes"))
         return qs
 
@@ -75,12 +81,6 @@ class UserSubscription(models.Model):
         verbose_name="На кого подписался",
     )
 
-    def __str__(self):
-        return (
-            f"Подписка '{self.follower.username}' на пользователя "
-            f"{self.following.username}"
-        )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -90,3 +90,9 @@ class UserSubscription(models.Model):
         ]
         verbose_name = "Подписка на пользователя"
         verbose_name_plural = "Подписки на пользователя"
+
+    def __str__(self):
+        return (
+            f"Подписка '{self.follower.username}' на пользователя "
+            f"{self.following.username}"
+        )
