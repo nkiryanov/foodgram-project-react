@@ -21,7 +21,8 @@ class MeasurementUnit(models.Model):
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "Единицы измерения"
+        verbose_name = "Единица измерения"
+        verbose_name_plural = "Единицы измерения"
 
     def __str__(self):
         return f"{self.name}"
@@ -173,9 +174,6 @@ class Recipe(models.Model):
     objects = models.Manager()
     ext_objects = RecipeQuerySet.as_manager()
 
-    def __str__(self):
-        return self.name
-
     class Meta:
         ordering = ["-pub_date"]
         constraints = [
@@ -185,6 +183,9 @@ class Recipe(models.Model):
         ]
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
+
+    def __str__(self):
+        return self.name
 
 
 class RecipeIngredient(models.Model):
@@ -208,9 +209,6 @@ class RecipeIngredient(models.Model):
         ],
     )
 
-    def __str__(self):
-        return f"{self.ingredient} в {self.recipe}"
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -220,6 +218,9 @@ class RecipeIngredient(models.Model):
         ]
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецептах"
+
+    def __str__(self):
+        return f"{self.ingredient} в {self.recipe}"
 
 
 class RecipeFavorite(models.Model):
@@ -264,12 +265,6 @@ class RecipeCart(models.Model):
         verbose_name="Рецепт",
     )
 
-    def __str__(self):
-        return (
-            f"Рецепт '{self.recipe.name}' из корзины покупок "
-            f"у {self.user.username}"
-        )
-
     class Meta:
         constraints = [
             models.UniqueConstraint(
@@ -279,3 +274,9 @@ class RecipeCart(models.Model):
         ]
         verbose_name = "Объект корзины покупок"
         verbose_name_plural = "Объекты корзины покупок"
+
+    def __str__(self):
+        return (
+            f"Рецепт '{self.recipe.name}' из корзины покупок "
+            f"у '{self.user.username}'"
+        )
