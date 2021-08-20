@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.db.models.expressions import Exists, OuterRef
 from django.db.models.query import Prefetch
 
+from ..core.constants import MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT
 from ..core.utils import cyrillic_slugify
 
 User = get_user_model()
@@ -30,6 +31,10 @@ class MeasurementUnit(models.Model):
 
 class IngredientQuerySet(models.QuerySet):
     def user_cart(self, user=None):
+        """
+        If 'user' provided returns list of distinct ingredients from
+        user's recipes in shopping cart.
+        """
         assert user is not None, "'user' is required attribute."
 
         qs = (
@@ -84,13 +89,13 @@ class RecipeTag(models.Model):
         db_index=True,
     )
 
+    def __str__(self):
+        return f"{self.name}"
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = cyrillic_slugify(self.name)
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name}"
 
     class Meta:
         ordering = [
@@ -157,7 +162,7 @@ class Recipe(models.Model):
         verbose_name="Время приготовления (в минутах)",
         validators=[
             MinValueValidator(1),
-            MaxValueValidator(4320),
+            MaxValueValidator(MAX_COOKING_TIME),
         ],
     )
     tags = models.ManyToManyField(
@@ -204,8 +209,8 @@ class RecipeIngredient(models.Model):
     amount = models.PositiveIntegerField(
         verbose_name="Количество",
         validators=[
-            MinValueValidator(0),
-            MaxValueValidator(200),
+            MinValueValidator(1),
+            MaxValueValidator(MAX_INGREDIENT_AMOUNT),
         ],
     )
 

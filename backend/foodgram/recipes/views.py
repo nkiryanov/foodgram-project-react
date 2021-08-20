@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotAcceptable, NotFound
+from rest_framework.exceptions import MethodNotAllowed, NotAcceptable, NotFound
 from rest_framework.permissions import (
     IsAuthenticated,
     IsAuthenticatedOrReadOnly,
@@ -97,6 +97,8 @@ class RecipeViewSet(ModelViewSet):
                 recipe=recipe,
             ).delete()
             return Response(status=status.HTTP_201_CREATED)
+
+        raise MethodNotAllowed()
 
     @action(
         methods=["get", "delete"],

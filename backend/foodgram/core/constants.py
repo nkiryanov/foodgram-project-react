@@ -37,3 +37,6 @@ TAGS = {
     "обед": "dinner",
     "ужин": "supper",
 }
+
+MAX_COOKING_TIME = 60 * 24 * 3
+MAX_INGREDIENT_AMOUNT = 10000
