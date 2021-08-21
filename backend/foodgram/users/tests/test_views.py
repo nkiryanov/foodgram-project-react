@@ -125,7 +125,7 @@ class UsersViewTests(APITestCase):
             msg="Убедитесь, что удалось подписать и объект подписки создан.",
         )
 
-    def test_user_can_unsubscribe_from_other_user(self):
+    def test_user_can_delete_subscription(self):
         """
         Sends 'DELETE' request to 'subscribe' url and checks
             - status code
@@ -156,6 +156,27 @@ class UsersViewTests(APITestCase):
         self.assertFalse(
             is_follower_follows_following,
             msg="Убедитесь, что объект подписки удален.",
+        )
+
+    def test_user_not_existend_subscription_couldnt_be_deleted(self):
+        """
+        Try to delete non existend subscription. Sends 'DELETE' request to
+        'subscribe' url and checks status code.
+        """
+
+        following = UserFactory()
+
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.delete(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg="При попытке удалить несуществующую попытку возвращается 404.",
         )
 
     def test_user_cant_subscribe_to_himself(self):

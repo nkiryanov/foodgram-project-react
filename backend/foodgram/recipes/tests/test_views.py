@@ -170,6 +170,25 @@ class RecipeViewTests(APITestCase):
             msg="Убедитесь, что рецепт удаляется из избранного.",
         )
 
+    def test_non_existend_favorite_recipe_couldnt_be_deleted(self):
+        """
+        Tries to delete form favorites the recipe that actually not in
+        favorites. 404 exception have to be raised.
+        """
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
+        client = RecipeViewTests.authorized_client
+        recipe_favorite_url = reverse("recipes-favorite", args=[recipe.id])
+
+        response = client.delete(path=recipe_favorite_url)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg=(
+                "Попытка удалить из избранного рецепт, которого там нет "
+                "должна возвращать 404."
+            ),
+        )
+
     def test_user_can_add_recipe_in_shopping_cart(self):
         """
         Sends 'GET' request to 'shopping_cart' url and checks
@@ -239,6 +258,28 @@ class RecipeViewTests(APITestCase):
         self.assertFalse(
             is_recipe_favorite,
             msg="Убедитесь, что рецепт удаляется из корзины.",
+        )
+
+    def test_non_existend_in_shopping_cart_recipe_couldnt_be_deleted(self):
+        """
+        Tries to delete form shopping cart the recipe that actually not in
+        shopping cart. 404 exception have to be raised.
+        """
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
+        client = RecipeViewTests.authorized_client
+        recipe_shopping_cart_url = reverse(
+            "recipes-shopping-cart",
+            args=[recipe.id],
+        )
+
+        response = client.delete(path=recipe_shopping_cart_url)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg=(
+                "При попытке удалить из корзины покупок рецепт, которого "
+                "там нет, должен возвращаться код 404."
+            ),
         )
 
     def test_authorized_user_download_shopping_cart(self):
