@@ -13,7 +13,7 @@ from ..factories import (
     RecipeFactory,
     RecipeTagFactory,
 )
-from ..models import Recipe, RecipeFavorite
+from ..models import Recipe, RecipeCart, RecipeFavorite
 
 TEMP_DIR = tempfile_mkdtemp()
 
@@ -105,7 +105,7 @@ class RecipeViewTests(APITestCase):
             ),
         )
 
-    def test_user_can_mark_recipe_as_favorite(self):
+    def test_user_can_add_recipe_as_favorite(self):
         """
         Sends 'GET' request to 'favorite' url and checks
             - status code
@@ -153,7 +153,7 @@ class RecipeViewTests(APITestCase):
         response = client.delete(path=recipe_favorite_url)
         self.assertEqual(
             response.status_code,
-            status.HTTP_201_CREATED,
+            status.HTTP_204_NO_CONTENT,
             msg=(
                 "После удалени рецепта из избранного возвращается "
                 "успешный код."
@@ -168,6 +168,77 @@ class RecipeViewTests(APITestCase):
         self.assertFalse(
             is_recipe_favorite,
             msg="Убедитесь, что рецепт удаляется из избранного.",
+        )
+
+    def test_user_can_add_recipe_in_shopping_cart(self):
+        """
+        Sends 'GET' request to 'shopping_cart' url and checks
+            - status code
+            - whether "RecipeCart" object was created
+        """
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
+        client = RecipeViewTests.authorized_client
+        recipe_shopping_cart_url = reverse(
+            "recipes-shopping-cart",
+            args=[recipe.id],
+        )
+
+        response = client.get(path=recipe_shopping_cart_url)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_201_CREATED,
+            msg=(
+                "После добавления рецепта в корзину должен возвращаться "
+                "успешный код."
+            ),
+        )
+
+        is_recipe_in_shopping_cart = RecipeCart.objects.filter(
+            user=RecipeViewTests.user,
+            recipe=recipe,
+        ).exists()
+
+        self.assertTrue(
+            is_recipe_in_shopping_cart,
+            msg="Убедитесь, что рецепт попадает в корзину покупок.",
+        )
+
+    def test_user_can_delete_recipe_from_shopping_cart(self):
+        """
+        Sends 'DELETE' request to 'shopping_cart' url and checks
+            - status code
+            - whether "RecipeCart" object was deleted
+        """
+        user = RecipeViewTests.user
+        recipe = RecipeFactory(author=RecipeViewTests.other_user)
+        RecipeCartFactory(
+            user=user,
+            recipe=recipe,
+        )
+        client = RecipeViewTests.authorized_client
+        recipe_shopping_cart_url = reverse(
+            "recipes-shopping-cart",
+            args=[recipe.id],
+        )
+
+        response = client.delete(path=recipe_shopping_cart_url)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_204_NO_CONTENT,
+            msg=(
+                "После удалени рецепта из корзины возвращается "
+                "успешный код."
+            ),
+        )
+
+        is_recipe_favorite = RecipeCart.objects.filter(
+            user=RecipeViewTests.user,
+            recipe=recipe,
+        ).exists()
+
+        self.assertFalse(
+            is_recipe_favorite,
+            msg="Убедитесь, что рецепт удаляется из корзины.",
         )
 
     def test_authorized_user_download_shopping_cart(self):
@@ -331,7 +402,7 @@ class RecipeCreateViewTests(APITestCase):
             msg="Всего должно стать +1 рецепт от первоначального значения.",
         )
 
-    def test_recipe_without_tags_coudldn_be_created(self):
+    def test_recipe_without_tags_couldnt_be_created(self):
         """Posts recipe without tags. We should returns errors."""
 
         data = self.data

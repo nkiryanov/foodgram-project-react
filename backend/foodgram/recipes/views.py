@@ -84,12 +84,12 @@ class RecipeViewSet(ModelViewSet):
         )
 
         recipe = self.get_object()
-        is_related_obj_exists = related_model.objects.filter(
-            user=request.user,
-            recipe=recipe,
-        ).exists()
 
         if request.method == "GET":
+            is_related_obj_exists = related_model.objects.filter(
+                user=request.user,
+                recipe=recipe,
+            ).exists()
             if is_related_obj_exists:
                 raise NotAcceptable("Такой рецепт у пользователя существует.")
             related_model.objects.create(
@@ -100,13 +100,14 @@ class RecipeViewSet(ModelViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == "DELETE":
-            if not is_related_obj_exists:
-                raise NotFound("Такой рецепт у пользователя не найден.")
-            related_model.objects.filter(
+            number_deleted_objects, _ = related_model.objects.filter(
                 user=request.user,
                 recipe=recipe,
             ).delete()
-            return Response(status=status.HTTP_201_CREATED)
+
+            if number_deleted_objects == 0:
+                raise NotFound("Такой рецепт у пользователя не найден.")
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         methods=["get", "delete"],
