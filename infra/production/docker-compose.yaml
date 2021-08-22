@@ -37,6 +37,7 @@ services:
     env_file:
       - ./.envs/.swag
     volumes:
+      - ./config/:/config/
       - certs_value:/config/etc/
       - static_value:/config/backend/static/
       - media_value:/config/backend/media/
