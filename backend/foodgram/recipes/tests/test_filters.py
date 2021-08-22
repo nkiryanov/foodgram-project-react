@@ -26,9 +26,9 @@ class RecipesFilterTests(APITestCase):
         IngredientFactory.create_batch(10)
 
         cls.user = UserFactory()
-        cls.tag1 = RecipeTagFactory(slug="tag1")
-        cls.tag2 = RecipeTagFactory(slug="tag2")
-        cls.tag3 = RecipeTagFactory(slug="tag3")
+        cls.tag1 = RecipeTagFactory(name="tag1")
+        cls.tag2 = RecipeTagFactory(name="tag2")
+        cls.tag3 = RecipeTagFactory(name="tag3")
 
         RecipeFactory.create_batch(
             3,
