@@ -32,7 +32,6 @@ services:
     environment:
       - TZ=Europe/Moscow
       - VALIDATION=http
-      - CERTPROVIDER=zerossl
     env_file:
       - ./.envs/.swag
     volumes:
