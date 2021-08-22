@@ -125,7 +125,7 @@ class UsersViewTests(APITestCase):
             msg="Убедитесь, что удалось подписать и объект подписки создан.",
         )
 
-    def test_user_can_unsubscribe_from_other_user(self):
+    def test_user_can_delete_subscription(self):
         """
         Sends 'DELETE' request to 'subscribe' url and checks
             - status code
@@ -144,8 +144,8 @@ class UsersViewTests(APITestCase):
         response = client.delete(path=url_subscribe_to_following_user)
         self.assertEqual(
             response.status_code,
-            status.HTTP_201_CREATED,
-            msg="Удачная отписка возвращает код 201.",
+            status.HTTP_204_NO_CONTENT,
+            msg="Удачная отписка возвращает код 204.",
         )
 
         is_follower_follows_following = UserSubscription.objects.filter(
@@ -156,6 +156,27 @@ class UsersViewTests(APITestCase):
         self.assertFalse(
             is_follower_follows_following,
             msg="Убедитесь, что объект подписки удален.",
+        )
+
+    def test_user_not_existend_subscription_couldnt_be_deleted(self):
+        """
+        Try to delete non existend subscription. Sends 'DELETE' request to
+        'subscribe' url and checks status code.
+        """
+
+        following = UserFactory()
+
+        client = UsersViewTests.authorized_client
+        url_subscribe_to_following_user = reverse(
+            "users-subscribe",
+            args=[following.id],
+        )
+
+        response = client.delete(path=url_subscribe_to_following_user)
+        self.assertEqual(
+            response.status_code,
+            status.HTTP_404_NOT_FOUND,
+            msg="При попытке удалить несуществующую попытку возвращается 404.",
         )
 
     def test_user_cant_subscribe_to_himself(self):
@@ -176,8 +197,8 @@ class UsersViewTests(APITestCase):
         response = client.get(path=url_subscribe_to_following_user)
         self.assertEqual(
             response.status_code,
-            status.HTTP_406_NOT_ACCEPTABLE,
-            msg="Попытка подписаться на себя должна вернуть код 406.",
+            status.HTTP_400_BAD_REQUEST,
+            msg="Попытка подписаться на себя должна вернуть код 400.",
         )
 
         is_follower_follows_following = UserSubscription.objects.filter(
@@ -213,8 +234,8 @@ class UsersViewTests(APITestCase):
         response = client.get(path=url_subscribe_to_following_user)
         self.assertEqual(
             response.status_code,
-            status.HTTP_406_NOT_ACCEPTABLE,
-            msg="При попытке подписаться дважды должен вернуться код 406.",
+            status.HTTP_400_BAD_REQUEST,
+            msg="При попытке подписаться дважды должен вернуться код 400.",
         )
 
         count_follower_follows_following = UserSubscription.objects.filter(
