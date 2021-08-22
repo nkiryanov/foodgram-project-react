@@ -4,6 +4,7 @@ volumes:
   postgres_data:
   static_value:
   media_value:
+  certs_value:
 
 services:
   postgres:
@@ -32,9 +33,11 @@ services:
     environment:
       - TZ=Europe/Moscow
       - VALIDATION=http
+      - CERTPROVIDER=zerossl
     env_file:
       - ./.envs/.swag
     volumes:
+      - certs_value:/config/etc/
       - static_value:/config/backend/static/
       - media_value:/config/backend/media/
       - ../../docs/:/config/backend/api/docs/
