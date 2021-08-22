@@ -4,7 +4,6 @@ volumes:
   postgres_data:
   static_value:
   media_value:
-  certs_value:
 
 services:
   postgres:
@@ -37,13 +36,12 @@ services:
     env_file:
       - ./.envs/.swag
     volumes:
-      - ./config/:/config/
-      - certs_value:/config/etc/
-      - static_value:/config/backend/static/
-      - media_value:/config/backend/media/
+      - ./swag_config/:/config/
+      - ./swag_nginx.conf:/config/nginx/site-confs/default
       - ../../docs/:/config/backend/api/docs/
       - ../../frontend/build/:/config/www/
-      - ./swag_nginx.conf:/config/nginx/site-confs/default
+      - static_value:/config/backend/static/
+      - media_value:/config/backend/media/
     ports:
       - 443:443
       - 80:80
