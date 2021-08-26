@@ -89,14 +89,20 @@ class RecipeSerializer(serializers.ModelSerializer):
             - "is_subscribed" field
     """
 
+    author = UserSerializer()
     tags = RecipeTagSerializer(many=True)
     ingredients = RecipeIngredientSerializer(
         source="recipeingredients",
         many=True,
     )
-    author = UserSerializer()
-    is_favorited = serializers.BooleanField(read_only=True)
-    is_in_shopping_cart = serializers.BooleanField(read_only=True)
+    is_favorited = serializers.BooleanField(
+        read_only=True,
+        default=False,
+    )
+    is_in_shopping_cart = serializers.BooleanField(
+        read_only=True,
+        default=False,
+    )
 
     class Meta:
         model = Recipe
@@ -237,3 +243,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             recipeingredients=recipeingredients,
         )
         return instance
+
+    def to_representation(self, instance):
+        serializer = RecipeSerializer(instance, context=self.context)
+        return serializer.data
