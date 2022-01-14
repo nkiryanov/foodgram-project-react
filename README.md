@@ -2,6 +2,8 @@
 [![production backend build and deploy](https://github.com/nkiryanov/foodgram-project-react/actions/workflows/production_deploy.yaml/badge.svg)](https://github.com/nkiryanov/foodgram-project-react/actions/workflows/production_deploy.yaml)
 # Продуктовый помощник. Скромный диплом курса python Я.Парктикум
 
+# ❗️ Проект переведен в архив и не обновляется ❗️
+
 ## Адрес развернутого проекта: [foodgram.kiryanov.ru](https://foodgram.kiryanov.ru)
 
 ### Что можно сделать
